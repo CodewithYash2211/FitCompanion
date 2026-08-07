@@ -8,12 +8,6 @@ import mongoose from 'mongoose'
 
 const MONGODB_URI = process.env.MONGODB_URI as string
 
-if (!MONGODB_URI) {
-  throw new Error(
-    'Please define the MONGODB_URI environment variable in .env.local'
-  )
-}
-
 /** Cached connection interface */
 interface MongooseCache {
   conn: typeof mongoose | null
@@ -37,6 +31,12 @@ if (!global.__mongoose) {
  * Returns the cached connection if available.
  */
 export async function connectToDatabase(): Promise<typeof mongoose> {
+  if (!MONGODB_URI) {
+    throw new Error(
+      'Please define the MONGODB_URI environment variable in .env.local'
+    )
+  }
+
   if (cached.conn) {
     return cached.conn
   }

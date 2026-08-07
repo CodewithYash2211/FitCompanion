@@ -301,7 +301,7 @@ export default function OnboardingPage() {
                           max={220}
                           step={1}
                           value={[field.value]}
-                          onValueChange={(val) => field.onChange(val[0])}
+                          onValueChange={(val) => field.onChange((val as number[])[0])}
                         />
                       )}
                     />
@@ -321,7 +321,7 @@ export default function OnboardingPage() {
                           max={150}
                           step={0.5}
                           value={[field.value]}
-                          onValueChange={(val) => field.onChange(val[0])}
+                          onValueChange={(val) => field.onChange((val as number[])[0])}
                         />
                       )}
                     />

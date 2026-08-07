@@ -45,8 +45,8 @@ export const onboardingSchema = z.object({
   fitnessLevel: z.enum(['beginner', 'intermediate', 'advanced'], {
     required_error: 'Please select your fitness level',
   }),
-  equipment: z.enum(['gym', 'home', 'none']).default('none'),
-  hostelMode: z.boolean().default(false),
+  equipment: z.enum(['gym', 'home', 'none']),
+  hostelMode: z.boolean().optional(),
 })
 
 export type OnboardingInput = z.infer<typeof onboardingSchema>
