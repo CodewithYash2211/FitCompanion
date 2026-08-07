@@ -2,7 +2,7 @@
 
 import * as React from 'react'
 import { motion } from 'framer-motion'
-import { PieChart, Utensils } from 'lucide-react'
+import { Utensils } from 'lucide-react'
 import { BentoCard } from '../BentoCard'
 import { AnimatedCounter } from '../AnimatedCounter'
 import type { DashboardData } from '@/services/mock-data'
@@ -10,48 +10,46 @@ import type { DashboardData } from '@/services/mock-data'
 export function NutritionOverview({ data }: { data: DashboardData }) {
   const { calories, protein, carbs, fat } = data.nutrition
   
-  const calcWidth = (current: number, max: number) => Math.min(100, Math.round((current / max) * 100))
-
   return (
-    <BentoCard delay={0.3} className="col-span-1 md:col-span-2 flex flex-col justify-between">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="font-display font-semibold text-lg text-foreground flex items-center gap-2">
-          <Utensils className="w-4 h-4 text-orange-400" />
+    <BentoCard variant="data" delay={0.3} className="col-span-1 md:col-span-2 flex flex-col justify-between">
+      <div className="flex items-center justify-between mb-6">
+        <h3 className="font-semibold text-sm text-foreground flex items-center gap-2">
+          <Utensils className="w-4 h-4 text-[#10b981]" />
           Nutrition
         </h3>
-        <span className="text-xs font-medium px-2 py-1 bg-white/5 rounded-md text-muted-foreground border border-white/10">
+        <span className="text-xs font-medium px-2 py-1 bg-[#1c1c1f] rounded border border-[#27272a] text-muted-foreground">
           <AnimatedCounter value={calories.max - calories.current} /> kcal left
         </span>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-6 lg:gap-8 items-center h-full">
-        {/* Calories Circular (Simulated with simple CSS conic-gradient or SVG, opting for SVG for smooth animation) */}
-        <div className="relative w-28 h-28 flex-shrink-0">
+      <div className="flex flex-col md:flex-row gap-8 items-center h-full">
+        {/* Calories Circular */}
+        <div className="relative w-24 h-24 flex-shrink-0">
           <svg className="w-full h-full transform -rotate-90">
-            <circle cx="56" cy="56" r="48" stroke="currentColor" strokeWidth="12" fill="transparent" className="text-white/5" />
+            <circle cx="48" cy="48" r="42" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-[#1c1c1f]" />
             <motion.circle
-              initial={{ strokeDashoffset: 2 * Math.PI * 48 }}
-              animate={{ strokeDashoffset: (2 * Math.PI * 48) - ((calories.current / calories.max) * (2 * Math.PI * 48)) }}
+              initial={{ strokeDashoffset: 2 * Math.PI * 42 }}
+              animate={{ strokeDashoffset: (2 * Math.PI * 42) - ((calories.current / calories.max) * (2 * Math.PI * 42)) }}
               transition={{ duration: 1.5, ease: "easeOut", delay: 0.6 }}
-              cx="56" cy="56" r="48"
-              stroke="currentColor" strokeWidth="12" fill="transparent" strokeLinecap="round"
-              className="text-orange-400"
-              style={{ strokeDasharray: 2 * Math.PI * 48 }}
+              cx="48" cy="48" r="42"
+              stroke="currentColor" strokeWidth="8" fill="transparent" strokeLinecap="round"
+              className="text-[#f59e0b]"
+              style={{ strokeDasharray: 2 * Math.PI * 42 }}
             />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-            <span className="font-display font-bold text-lg leading-none">
+            <span className="font-semibold text-xl leading-none text-foreground">
               <AnimatedCounter value={calories.current} />
             </span>
-            <span className="text-[10px] text-muted-foreground font-medium uppercase mt-1">/ {calories.max}</span>
+            <span className="text-[10px] text-muted-foreground font-medium mt-1">/ {calories.max}</span>
           </div>
         </div>
 
         {/* Macros Bars */}
         <div className="flex-1 w-full space-y-4">
-          <MacroBar label="Protein" current={protein.current} max={protein.max} color="bg-macro-protein" delay={0.7} />
-          <MacroBar label="Carbs" current={carbs.current} max={carbs.max} color="bg-macro-carbs" delay={0.8} />
-          <MacroBar label="Fat" current={fat.current} max={fat.max} color="bg-macro-fat" delay={0.9} />
+          <MacroBar label="Protein" current={protein.current} max={protein.max} color="bg-[#10b981]" delay={0.7} />
+          <MacroBar label="Carbs" current={carbs.current} max={carbs.max} color="bg-[#f59e0b]" delay={0.8} />
+          <MacroBar label="Fat" current={fat.current} max={fat.max} color="bg-[#3b82f6]" delay={0.9} />
         </div>
       </div>
     </BentoCard>
@@ -69,7 +67,7 @@ function MacroBar({ label, current, max, color, delay }: { label: string, curren
           <AnimatedCounter value={current} />g <span className="text-muted-foreground">/ {max}g</span>
         </span>
       </div>
-      <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
+      <div className="h-1.5 w-full bg-[#1c1c1f] rounded-full overflow-hidden">
         <motion.div 
           initial={{ width: 0 }}
           animate={{ width: `${percentage}%` }}

@@ -1,12 +1,11 @@
 /**
  * Root Layout — FitCompanion
  * Wraps the entire application with global providers, fonts, and PWA metadata.
- *
- * Fonts are loaded via <link> tags (Google Fonts CDN) rather than next/font/google
- * to avoid build-time network failures in restricted environments.
  */
 
 import type { Metadata, Viewport } from 'next'
+import { GeistSans } from 'geist/font/sans'
+import { GeistMono } from 'geist/font/mono'
 import { Toaster } from '@/components/ui/sonner'
 import { Providers } from '@/components/providers'
 import '@/app/globals.css'
@@ -44,7 +43,7 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  themeColor: '#7C3AED',
+  themeColor: '#0a0a0c',
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
@@ -61,38 +60,26 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className="dark"
+      className={`dark ${GeistSans.variable} ${GeistMono.variable}`}
       suppressHydrationWarning
     >
       <head>
-        {/* Preconnect for faster font loading */}
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-
-        {/* Google Fonts — loaded at runtime, not build time */}
-        {/* eslint-disable-next-line @next/next/no-page-custom-font */}
-        <link
-          href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
-          rel="stylesheet"
-        />
-
-        {/* PWA Icons */}
         <link rel="apple-touch-icon" href="/icons/icon-192.png" />
       </head>
-      <body className="antialiased min-h-screen bg-bg-base" suppressHydrationWarning>
+      <body className="antialiased min-h-screen font-sans" suppressHydrationWarning>
         <Providers>
           {children}
         </Providers>
 
-        {/* Global toast notifications — styled to match glass theme */}
+        {/* Global toast notifications — styled to match premium linear theme */}
         <Toaster
           theme="dark"
           toastOptions={{
             style: {
-              background: 'rgba(13, 13, 26, 0.9)',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
-              backdropFilter: 'blur(20px)',
-              color: '#F0F0FF',
+              background: '#121214',
+              border: '1px solid #27272a',
+              color: '#ededef',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
             },
           }}
         />

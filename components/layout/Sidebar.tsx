@@ -1,144 +1,114 @@
-/**
- * Sidebar Navigation — Desktop
- * Fixed 240px glass sidebar for app routes.
- * Collapses to icon-only on tablet (64px).
- */
-
 'use client'
 
+import * as React from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import {
-  LayoutDashboard, Bot, Salad, Dumbbell, BarChart3,
-  History, Calculator, Settings, Zap, LogOut, ChevronRight
+import { motion, LayoutGroup } from 'framer-motion'
+import { 
+  LayoutDashboard, 
+  Utensils, 
+  Dumbbell, 
+  Sparkles, 
+  Calculator,
+  LineChart,
+  History,
+  Settings,
+  Zap
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-// ─── Nav Items ────────────────────────────────────────────────────────────────
-
-const navItems = [
-  { href: '/dashboard',    icon: LayoutDashboard, label: 'Dashboard' },
-  { href: '/ai-coach',     icon: Bot,             label: 'AI Coach',    badge: 'AI' },
-  { href: '/nutrition',    icon: Salad,           label: 'Nutrition' },
-  { href: '/fitness',      icon: Dumbbell,        label: 'Fitness' },
-  { href: '/analytics',    icon: BarChart3,       label: 'Analytics' },
-  { href: '/history',      icon: History,         label: 'History' },
+const NAV_ITEMS = [
+  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/nutrition', label: 'Diet Planner', icon: Utensils },
+  { href: '/fitness', label: 'Workout Planner', icon: Dumbbell },
+  { href: '/ai-coach', label: 'AI Coach', icon: Sparkles },
+  { href: '/calculators', label: 'Calculators', icon: Calculator },
+  { href: '/analytics', label: 'Analytics', icon: LineChart },
+  { href: '/history', label: 'History', icon: History },
+  { href: '/settings', label: 'Settings', icon: Settings },
 ]
-
-const toolItems = [
-  { href: '/calculators', icon: Calculator, label: 'Calculators' },
-  { href: '/settings',    icon: Settings,   label: 'Settings' },
-]
-
-// ─── NavItem Component ────────────────────────────────────────────────────────
-
-interface NavItemProps {
-  href: string
-  icon: React.ElementType
-  label: string
-  badge?: string
-  isActive: boolean
-}
-
-function NavItem({ href, icon: Icon, label, badge, isActive }: NavItemProps) {
-  return (
-    <Link
-      href={href}
-      className={cn(
-        'group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 relative',
-        isActive
-          ? 'bg-brand-500/15 text-brand-400 border border-brand-500/20'
-          : 'text-muted-foreground hover:text-foreground hover:bg-white/5'
-      )}
-    >
-      <Icon
-        className={cn(
-          'w-4 h-4 flex-shrink-0 transition-colors',
-          isActive ? 'text-brand-400' : 'text-muted-foreground group-hover:text-foreground'
-        )}
-      />
-      <span className="flex-1 hidden lg:block">{label}</span>
-      {badge && (
-        <span className="hidden lg:block text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-brand-500/20 text-brand-400">
-          {badge}
-        </span>
-      )}
-      {isActive && (
-        <div className="absolute right-0 w-1 h-4 bg-brand-500 rounded-l-full" />
-      )}
-    </Link>
-  )
-}
-
-// ─── Sidebar Component ────────────────────────────────────────────────────────
 
 export function Sidebar() {
   const pathname = usePathname()
 
   return (
-    <aside
-      className={cn(
-        'fixed left-0 top-0 h-full z-40',
-        'w-16 lg:w-60',
-        'glass-heavy border-r border-white/8',
-        'flex flex-col',
-        'transition-all duration-300'
-      )}
-    >
-      {/* Logo */}
-      <div className="flex items-center gap-3 p-4 border-b border-white/8">
-        <div
-          className="w-8 h-8 rounded-xl bg-gradient-brand flex items-center justify-center flex-shrink-0"
-          style={{ boxShadow: '0 0 16px rgba(124, 58, 237, 0.4)' }}
-        >
-          <Zap className="w-4 h-4 text-white" strokeWidth={2.5} />
+    <div className="w-64 h-screen border-r border-[#27272a] bg-[#0a0a0c] flex flex-col fixed left-0 top-0 pt-8 pb-6 z-40 shadow-[4px_0_24px_rgba(0,0,0,0.5)]">
+      {/* Brand Logo */}
+      <div className="px-8 mb-10 flex items-center gap-3 group cursor-pointer">
+        <div className="w-8 h-8 rounded-[10px] bg-[#ededef] flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform duration-300">
+          <Zap className="w-4 h-4 text-[#0a0a0c]" strokeWidth={3} />
         </div>
-        <span className="hidden lg:block font-display font-bold text-base text-foreground tracking-tight">
+        <span className="font-semibold text-lg text-foreground tracking-tight">
           FitCompanion
         </span>
       </div>
 
-      {/* Primary nav */}
-      <nav className="flex-1 p-2 space-y-1 overflow-y-auto">
-        {navItems.map((item) => (
-          <NavItem
-            key={item.href}
-            {...item}
-            isActive={pathname === item.href || pathname.startsWith(item.href + '/')}
-          />
-        ))}
+      {/* Navigation */}
+      <nav className="flex-1 px-4 space-y-1 relative">
+        <LayoutGroup>
+          {NAV_ITEMS.map((item) => {
+            const isActive = pathname === item.href
+            const Icon = item.icon
 
-        {/* Divider */}
-        <div className="my-3 border-t border-white/5" />
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  'group flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors relative',
+                  isActive 
+                    ? 'text-foreground' 
+                    : 'text-muted-foreground hover:text-foreground hover:bg-[#121214]'
+                )}
+              >
+                {/* Active Indicator Background */}
+                {isActive && (
+                  <motion.div
+                    layoutId="sidebar-active-indicator"
+                    className="absolute inset-0 bg-[#1c1c1f] rounded-lg border border-[#27272a]"
+                    initial={false}
+                    transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                  />
+                )}
+                
+                {/* Active left bar */}
+                {isActive && (
+                  <motion.div 
+                    layoutId="sidebar-active-bar"
+                    className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-4 bg-[#ededef] rounded-r-full"
+                    transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                  />
+                )}
 
-        {/* Tool items */}
-        {toolItems.map((item) => (
-          <NavItem
-            key={item.href}
-            {...item}
-            isActive={pathname === item.href}
-          />
-        ))}
+                <div className="relative z-10 flex items-center gap-3">
+                  <Icon 
+                    className={cn(
+                      "w-4 h-4 transition-transform duration-300", 
+                      isActive ? "text-foreground" : "text-muted-foreground group-hover:scale-110"
+                    )} 
+                  />
+                  <span>{item.label}</span>
+                </div>
+              </Link>
+            )
+          })}
+        </LayoutGroup>
       </nav>
 
-      {/* User section */}
-      <div className="p-2 border-t border-white/8">
-        <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/5 transition-colors cursor-pointer group">
-          {/* Avatar */}
-          <div className="w-8 h-8 rounded-full bg-brand-500/20 border border-brand-500/30 flex items-center justify-center flex-shrink-0">
-            <span className="text-xs font-semibold text-brand-400">A</span>
+      {/* Upgrade CTA / User Footer */}
+      <div className="px-4 mt-auto">
+        <div className="p-4 rounded-xl bg-[#121214] border border-[#27272a] shadow-sm flex flex-col gap-3 group hover:border-[#3f3f46] transition-colors cursor-pointer">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-full bg-[#1c1c1f] border border-[#27272a] flex items-center justify-center text-xs font-semibold">
+              Y
+            </div>
+            <div className="flex flex-col">
+              <span className="text-sm font-medium text-foreground leading-none mb-1">Yash</span>
+              <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Free Plan</span>
+            </div>
           </div>
-          <div className="hidden lg:flex flex-col min-w-0 flex-1">
-            <span className="text-sm font-medium text-foreground truncate">Arjun</span>
-            <span className="text-xs text-muted-foreground truncate">arjun@example.com</span>
-          </div>
-          <ChevronRight className="hidden lg:block w-4 h-4 text-muted-foreground group-hover:text-foreground" />
         </div>
-        <button className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-muted-foreground hover:text-danger hover:bg-danger/5 transition-all mt-1">
-          <LogOut className="w-4 h-4 flex-shrink-0" />
-          <span className="hidden lg:block">Sign Out</span>
-        </button>
       </div>
-    </aside>
+    </div>
   )
 }
