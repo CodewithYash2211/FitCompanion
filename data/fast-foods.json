@@ -1,0 +1,22 @@
+[
+  { "id": "FF001", "name": "Burger (Veg)", "category": "Fast Food", "serving": "1 burger (180g)", "calories": 370, "protein": 10, "carbs": 48, "fat": 16, "fiber": 4 },
+  { "id": "FF002", "name": "Burger (Chicken)", "category": "Fast Food", "serving": "1 burger (200g)", "calories": 450, "protein": 22, "carbs": 46, "fat": 20, "fiber": 3 },
+  { "id": "FF003", "name": "Pizza (1 slice Margherita)", "category": "Fast Food", "serving": "1 slice (100g)", "calories": 270, "protein": 11, "carbs": 32, "fat": 10, "fiber": 2 },
+  { "id": "FF004", "name": "French Fries (medium)", "category": "Fast Food", "serving": "1 medium (117g)", "calories": 365, "protein": 4, "carbs": 48, "fat": 17, "fiber": 4 },
+  { "id": "FF005", "name": "Rolls (Paneer Frankie)", "category": "Fast Food", "serving": "1 roll (200g)", "calories": 390, "protein": 14, "carbs": 52, "fat": 15, "fiber": 4 },
+  { "id": "FF006", "name": "Pav Bhaji", "category": "Fast Food", "serving": "1 plate (300g)", "calories": 440, "protein": 10, "carbs": 70, "fat": 14, "fiber": 8 },
+  { "id": "FF007", "name": "Chole Bhature", "category": "Fast Food", "serving": "2 bhature + chole", "calories": 620, "protein": 18, "carbs": 88, "fat": 24, "fiber": 10 },
+  { "id": "FF008", "name": "Dahi Puri", "category": "Street Food", "serving": "6 pieces (200g)", "calories": 240, "protein": 7, "carbs": 38, "fat": 8, "fiber": 4 },
+  { "id": "FF009", "name": "Pani Puri (6 pieces)", "category": "Street Food", "serving": "6 pieces (100g)", "calories": 180, "protein": 4, "carbs": 32, "fat": 5, "fiber": 3 },
+  { "id": "FF010", "name": "Aloo Tikki (2 pieces)", "category": "Street Food", "serving": "2 tikkis (150g)", "calories": 240, "protein": 4, "carbs": 38, "fat": 9, "fiber": 4 },
+  { "id": "FF011", "name": "Cold Coffee (cafe)", "category": "Beverage", "serving": "1 glass (400ml)", "calories": 280, "protein": 6, "carbs": 44, "fat": 8, "fiber": 0 },
+  { "id": "FF012", "name": "Soft Drink (Coke/Pepsi 600ml)", "category": "Beverage", "serving": "600ml", "calories": 240, "protein": 0, "carbs": 60, "fat": 0, "fiber": 0 },
+  { "id": "FF013", "name": "Energy Drink (250ml)", "category": "Beverage", "serving": "250ml", "calories": 112, "protein": 0, "carbs": 28, "fat": 0, "fiber": 0 },
+  { "id": "FF014", "name": "Instant Noodles (Maggi 70g)", "category": "Instant", "serving": "1 pack (70g)", "calories": 310, "protein": 8, "carbs": 44, "fat": 12, "fiber": 2 },
+  { "id": "FF015", "name": "Cup Noodles", "category": "Instant", "serving": "1 cup (75g)", "calories": 320, "protein": 7, "carbs": 48, "fat": 13, "fiber": 2 },
+  { "id": "FF016", "name": "Chips (Lays, 50g)", "category": "Snacks", "serving": "1 pack (50g)", "calories": 270, "protein": 3, "carbs": 28, "fat": 17, "fiber": 2 },
+  { "id": "FF017", "name": "Chocolate Bar (Dairy Milk)", "category": "Snacks", "serving": "1 bar (40g)", "calories": 210, "protein": 3, "carbs": 26, "fat": 11, "fiber": 1 },
+  { "id": "FF018", "name": "Ice Cream (1 scoop)", "category": "Dessert", "serving": "1 scoop (100g)", "calories": 207, "protein": 4, "carbs": 24, "fat": 11, "fiber": 0 },
+  { "id": "FF019", "name": "Momos (steamed, 6 pieces)", "category": "Fast Food", "serving": "6 pieces (180g)", "calories": 270, "protein": 10, "carbs": 42, "fat": 7, "fiber": 3 },
+  { "id": "FF020", "name": "Momos (fried, 6 pieces)", "category": "Fast Food", "serving": "6 pieces (200g)", "calories": 380, "protein": 10, "carbs": 44, "fat": 18, "fiber": 2 }
+]

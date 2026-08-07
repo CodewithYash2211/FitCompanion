@@ -1,0 +1,340 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+/*
+ * Note: Google Fonts are loaded via <link> tags in app/layout.tsx
+ * to avoid build-time network dependency.
+ * Font families are referenced by name in the @theme block below.
+ */
+
+@custom-variant dark (&:is(.dark *));
+
+/* ─── FitCompanion Design System Tokens ─────────────────────────────────────
+ * All color values use oklch for perceptual uniformity (required for TW v4).
+ * Additional raw CSS variables below for glassmorphism and aurora effects.
+ * ─────────────────────────────────────────────────────────────────────────── */
+
+@theme inline {
+  /* ── Tailwind Color Tokens ────────────────────────────────────────────── */
+  --color-background:         var(--background);
+  --color-foreground:         var(--foreground);
+  --color-card:               var(--card);
+  --color-card-foreground:    var(--card-foreground);
+  --color-popover:            var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary:            var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary:          var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted:              var(--muted);
+  --color-muted-foreground:   var(--muted-foreground);
+  --color-accent:             var(--accent);
+  --color-accent-foreground:  var(--accent-foreground);
+  --color-destructive:        var(--destructive);
+  --color-border:             var(--border);
+  --color-input:              var(--input);
+  --color-ring:               var(--ring);
+
+  /* ── Brand Colors ─────────────────────────────────────────────────────── */
+  --color-brand-400: oklch(0.68 0.22 290);   /* #8B5CF6 violet-light */
+  --color-brand-500: oklch(0.60 0.24 290);   /* #7C3AED violet */
+  --color-brand-600: oklch(0.54 0.23 290);   /* #6D28D9 violet-dark */
+  --color-brand-indigo: oklch(0.56 0.22 265);/* #4F46E5 indigo */
+
+  /* ── Semantic Colors ──────────────────────────────────────────────────── */
+  --color-success: oklch(0.72 0.17 162);     /* #10B981 emerald */
+  --color-warning: oklch(0.78 0.17 67);      /* #F59E0B amber */
+  --color-danger:  oklch(0.65 0.24 25);      /* #EF4444 red */
+  --color-info:    oklch(0.67 0.19 243);     /* #3B82F6 blue */
+
+  /* ── Macro Colors ─────────────────────────────────────────────────────── */
+  --color-macro-protein: oklch(0.74 0.19 345); /* #F472B6 pink */
+  --color-macro-carbs:   oklch(0.83 0.17 79);  /* #FBBF24 amber */
+  --color-macro-fat:     oklch(0.70 0.17 239);  /* #60A5FA blue */
+  --color-macro-fiber:   oklch(0.80 0.17 162); /* #34D399 emerald */
+  --color-water:         oklch(0.82 0.16 200); /* #22D3EE cyan */
+
+  /* ── Background Layers ────────────────────────────────────────────────── */
+  --color-bg-void:     oklch(0.09 0.01 278);  /* #050508 deepest bg */
+  --color-bg-base:     oklch(0.11 0.015 278); /* #08080F base */
+  --color-bg-surface:  oklch(0.13 0.016 278); /* #0D0D1A surface */
+  --color-bg-elevated: oklch(0.15 0.016 278); /* #131320 elevated */
+  --color-bg-overlay:  oklch(0.17 0.015 278); /* #1A1A2E overlay */
+
+  /* ── Typography ───────────────────────────────────────────────────────── */
+  --font-sans:    'Inter', system-ui, sans-serif;
+  --font-display: 'Outfit', system-ui, sans-serif;
+  --font-mono:    'JetBrains Mono', 'Fira Code', monospace;
+
+  /* ── Radius Scale ─────────────────────────────────────────────────────── */
+  --radius-xs:   0.25rem;   /* 4px */
+  --radius-sm:   0.5rem;    /* 8px */
+  --radius-md:   0.75rem;   /* 12px */
+  --radius-lg:   1rem;      /* 16px */
+  --radius-xl:   1.25rem;   /* 20px */
+  --radius-2xl:  1.5rem;    /* 24px */
+  --radius-3xl:  2rem;      /* 32px */
+  --radius-full: 9999px;
+
+  /* ── Chart Colors ─────────────────────────────────────────────────────── */
+  --color-chart-1: oklch(0.60 0.24 290);     /* brand violet */
+  --color-chart-2: oklch(0.72 0.17 162);     /* success emerald */
+  --color-chart-3: oklch(0.78 0.17 67);      /* warning amber */
+  --color-chart-4: oklch(0.67 0.19 243);     /* info blue */
+  --color-chart-5: oklch(0.74 0.19 345);     /* protein pink */
+
+  /* ── Sidebar ──────────────────────────────────────────────────────────── */
+  --color-sidebar:                    var(--sidebar);
+  --color-sidebar-foreground:         var(--sidebar-foreground);
+  --color-sidebar-primary:            var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent:             var(--sidebar-accent);
+  --color-sidebar-accent-foreground:  var(--sidebar-accent-foreground);
+  --color-sidebar-border:             var(--sidebar-border);
+  --color-sidebar-ring:               var(--sidebar-ring);
+}
+
+/* ─── Root Semantic Tokens (Dark theme by default — we're always dark) ──────── */
+:root {
+  /* Shadcn semantic tokens mapped to our dark palette */
+  --background:             oklch(0.11 0.015 278);   /* --bg-base */
+  --foreground:             oklch(0.96 0.005 278);   /* near-white */
+  --card:                   oklch(0.13 0.016 278);   /* --bg-surface */
+  --card-foreground:        oklch(0.96 0.005 278);
+  --popover:                oklch(0.17 0.015 278);   /* --bg-overlay */
+  --popover-foreground:     oklch(0.96 0.005 278);
+  --primary:                oklch(0.60 0.24 290);    /* brand-500 violet */
+  --primary-foreground:     oklch(0.98 0.005 278);   /* white text on violet */
+  --secondary:              oklch(0.17 0.015 278);   /* bg-overlay */
+  --secondary-foreground:   oklch(0.65 0.01 278);    /* muted text */
+  --muted:                  oklch(0.15 0.016 278);   /* bg-elevated */
+  --muted-foreground:       oklch(0.55 0.01 278);    /* very muted */
+  --accent:                 oklch(0.17 0.02 290);    /* subtle violet tint */
+  --accent-foreground:      oklch(0.68 0.22 290);    /* brand-400 */
+  --destructive:            oklch(0.65 0.24 25);     /* red */
+  --border:                 oklch(1 0 0 / 8%);       /* glass border */
+  --input:                  oklch(1 0 0 / 8%);
+  --ring:                   oklch(0.60 0.24 290);    /* brand violet focus */
+  --radius:                 1rem;                    /* 16px base radius */
+
+  /* Sidebar tokens */
+  --sidebar:                oklch(0.13 0.016 278);
+  --sidebar-foreground:     oklch(0.65 0.01 278);
+  --sidebar-primary:        oklch(0.60 0.24 290);
+  --sidebar-primary-foreground: oklch(0.98 0.005 278);
+  --sidebar-accent:         oklch(0.17 0.02 290);
+  --sidebar-accent-foreground: oklch(0.96 0.005 278);
+  --sidebar-border:         oklch(1 0 0 / 8%);
+  --sidebar-ring:           oklch(0.60 0.24 290);
+
+  /* ── Glassmorphism variables (not Tailwind — used in custom CSS) ────── */
+  --glass-bg:           rgba(255, 255, 255, 0.04);
+  --glass-bg-hover:     rgba(255, 255, 255, 0.07);
+  --glass-border:       rgba(255, 255, 255, 0.08);
+  --glass-border-hover: rgba(255, 255, 255, 0.15);
+  --glass-blur:         20px;
+  --glass-blur-heavy:   40px;
+
+  /* ── Brand glow shadows ───────────────────────────────────────────────── */
+  --glow-brand:   0 0 40px rgba(124, 58, 237, 0.35);
+  --glow-success: 0 0 30px rgba(16, 185, 129, 0.30);
+  --glow-warning: 0 0 30px rgba(245, 158, 11, 0.30);
+  --glow-danger:  0 0 30px rgba(239, 68, 68, 0.30);
+  --glow-water:   0 0 30px rgba(34, 211, 238, 0.25);
+  --glow-card:    0 0 0 1px rgba(124, 58, 237, 0.30), 0 8px 32px rgba(124, 58, 237, 0.15);
+
+  /* ── Aurora colors ────────────────────────────────────────────────────── */
+  --aurora-violet:  rgba(124, 58, 237, 0.12);
+  --aurora-indigo:  rgba(79, 70, 229, 0.08);
+  --aurora-emerald: rgba(16, 185, 129, 0.06);
+  --aurora-cyan:    rgba(34, 211, 238, 0.05);
+}
+
+/* ─── Base Layer Overrides ────────────────────────────────────────────────── */
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+    box-sizing: border-box;
+  }
+
+  html {
+    @apply font-sans antialiased;
+    scroll-behavior: smooth;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    background-color: #08080F;
+    min-height: 100vh;
+    /* Subtle noise texture for depth */
+    background-image:
+      radial-gradient(ellipse at 20% 10%, var(--aurora-violet) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 90%, var(--aurora-indigo) 0%, transparent 50%),
+      radial-gradient(ellipse at 60% 50%, var(--aurora-emerald) 0%, transparent 40%);
+    background-attachment: fixed;
+  }
+
+  /* Custom scrollbar matching the dark theme */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(124, 58, 237, 0.3);
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(124, 58, 237, 0.6);
+  }
+
+  /* Selection color */
+  ::selection {
+    background-color: rgba(124, 58, 237, 0.3);
+    color: #F0F0FF;
+  }
+}
+
+/* ─── Utility Classes ─────────────────────────────────────────────────────── */
+@layer utilities {
+  /* Font families */
+  .font-display { font-family: 'Outfit', system-ui, sans-serif; }
+  .font-mono-num { font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; }
+
+  /* Glass card recipe */
+  .glass {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+  }
+
+  .glass-heavy {
+    background: rgba(13, 13, 26, 0.85);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(var(--glass-blur-heavy));
+    -webkit-backdrop-filter: blur(var(--glass-blur-heavy));
+  }
+
+  .glass-hover:hover {
+    background: var(--glass-bg-hover);
+    border-color: var(--glass-border-hover);
+    box-shadow: var(--glow-card);
+  }
+
+  /* Brand gradient text */
+  .text-gradient-brand {
+    background: linear-gradient(135deg, #8B5CF6 0%, #4F46E5 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Brand gradient background */
+  .bg-gradient-brand {
+    background: linear-gradient(135deg, #7C3AED 0%, #4F46E5 100%);
+  }
+
+  /* Glow effects */
+  .glow-brand   { box-shadow: var(--glow-brand); }
+  .glow-success { box-shadow: var(--glow-success); }
+  .glow-warning { box-shadow: var(--glow-warning); }
+  .glow-water   { box-shadow: var(--glow-water); }
+  .glow-card:hover { box-shadow: var(--glow-card); }
+
+  /* Macro colors */
+  .text-macro-protein { color: #F472B6; }
+  .text-macro-carbs   { color: #FBBF24; }
+  .text-macro-fat     { color: #60A5FA; }
+  .text-macro-fiber   { color: #34D399; }
+  .text-water         { color: #22D3EE; }
+
+  .bg-macro-protein { background-color: #F472B6; }
+  .bg-macro-carbs   { background-color: #FBBF24; }
+  .bg-macro-fat     { background-color: #60A5FA; }
+
+  /* Animated aurora blob */
+  .aurora-blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    pointer-events: none;
+    animation: aurora-float 20s ease-in-out infinite alternate;
+    will-change: transform;
+  }
+}
+
+/* ─── Keyframe Animations ─────────────────────────────────────────────────── */
+@layer base {
+  @keyframes aurora-float {
+    0%   { transform: translate(0, 0) scale(1); }
+    33%  { transform: translate(30px, -20px) scale(1.05); }
+    66%  { transform: translate(-20px, 15px) scale(0.97); }
+    100% { transform: translate(10px, 5px) scale(1.02); }
+  }
+
+  @keyframes shimmer {
+    0%   { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+
+  @keyframes pulse-glow {
+    0%, 100% { box-shadow: 0 0 20px rgba(124, 58, 237, 0.3); }
+    50%       { box-shadow: 0 0 40px rgba(124, 58, 237, 0.6); }
+  }
+
+  @keyframes flame-flicker {
+    0%, 100% { transform: scale(1) rotate(-3deg); }
+    25%       { transform: scale(1.1) rotate(2deg); }
+    50%       { transform: scale(1.05) rotate(-1deg); }
+    75%       { transform: scale(1.08) rotate(3deg); }
+  }
+
+  @keyframes water-ripple {
+    0%   { transform: scale(1); opacity: 0.6; }
+    100% { transform: scale(2.5); opacity: 0; }
+  }
+
+  @keyframes count-up {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes slide-up {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  @keyframes card-enter {
+    from { opacity: 0; transform: translateY(24px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+}
+
+/* ─── Skeleton Loader ─────────────────────────────────────────────────────── */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.04) 0%,
+    rgba(255, 255, 255, 0.08) 50%,
+    rgba(255, 255, 255, 0.04) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--radius-md);
+}
+
+/* ─── PWA Safe Area Support ─────────────────────────────────────────────── */
+.safe-top    { padding-top: env(safe-area-inset-top); }
+.safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+
+/* ─── Focus visible ring ─────────────────────────────────────────────────── */
+.focus-ring:focus-visible {
+  outline: 2px solid #7C3AED;
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
