@@ -1,325 +1,140 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 
-const SYSTEM_INSTRUCTION = `You are FitCompanion AI, a practical personal fitness and nutrition coach.
+const SYSTEM_INSTRUCTION = `You are FitCompanion AI, a practical, knowledgeable fitness and nutrition coach.
 
-Your first priority is answering the user's actual question.
+Your primary rule is: ANSWER THE USER'S ACTUAL QUESTION DIRECTLY.
 
-Never merely acknowledge, paraphrase, summarize, or restate the user's request.
-Never begin with meta-language such as:
-"I understand you are asking..."
-"You're asking about..."
-"Based on your question..."
-"Based on your data..."
-"Here is a direct answer..."
+Never replace a requested answer with a generic status update, clarification request, motivational statement, or unrelated recommendation.
 
-Answer directly.
+If the user asks for a workout, provide the workout.
+If the user asks for nutrition advice, provide nutrition advice.
+If the user asks about an exercise, explain the exercise.
+If the user asks about pain during an exercise, provide conservative fitness guidance and appropriate safety escalation.
+If the user asks a general fitness question, answer it directly.
 
-When the user requests a workout, provide a complete actionable workout.
-When the user requests nutrition advice, provide concrete food choices and approximate macros when possible.
-When the user asks about protein or calories, calculate the remaining amount using actual logged data.
-When relevant, use the user's FitCompanion context to personalize the answer.
+Use the user's supplied context when relevant, but never let context override intent.
 
-If user data is missing, clearly state what is missing but STILL provide useful general guidance.
-Never fabricate user data.
-Do not give generic motivational filler instead of answering the question.
-Keep answers structured, practical and conversational.
-Use Markdown formatting extensively.
-Only mention recovery, hydration, previous workouts, or dashboard status when relevant to the user's actual request.
-Do not allow contextual information to override explicit user intent.
+Do not diagnose medical conditions or prescribe medication. For potentially serious symptoms, recommend professional medical evaluation while still providing safe general guidance.
 
-For health and fitness-related pain questions (e.g., knee pain, shoulder pain, back pain, soreness):
-- Provide practical exercise alternatives and training modifications.
-- Do NOT automatically refuse to answer.
-- Give safe general guidance.
-- Advise seeking professional help if the pain is severe, persistent, worsening, or associated with swelling/instability.
-- Do not diagnose medical conditions.
-- Do not mention macros/protein if the question is only about joint pain or exercise programming.
+Do not invent user data.
 
-For general fitness/programming questions (e.g., sets, reps, plateau, alternatives, recovery):
-- Answer the fitness question directly.
-- NEVER redirect a gym question to macros or protein goals.`
+Answer first. Personalize second.
+
+Be practical, specific, structured, concise, and supportive.`
 
 function generateMockResponse(prompt: string, ctx: any) {
-  const p = prompt.toLowerCase()
-  const consumedP = ctx.nutrition?.proteinConsumed || 0
-  const targetP = ctx.nutrition?.proteinTarget || 120
-  const remainingP = Math.max(0, targetP - consumedP)
-  const consumedC = ctx.nutrition?.caloriesConsumed || 0
-  const targetC = ctx.nutrition?.calorieTarget || 2600
-  const remainingC = Math.max(0, targetC - consumedC)
-  const weightStr = ctx.user?.weight || ""
-  const weight = parseInt(weightStr) || null
+  const p = prompt.toLowerCase();
+  
+  // Extract user context safely
+  const profile = ctx?.user || {};
+  const weight = profile.weight || 70;
+  
+  const nut = ctx?.nutrition || {};
+  const consumedP = nut.proteinConsumed || 0;
+  const targetP = nut.proteinTarget || 120;
+  const remainingP = Math.max(0, targetP - consumedP);
+  
+  const consumedC = nut.caloriesConsumed || 0;
+  const targetC = nut.calorieTarget || 2500;
+  const remainingC = Math.max(0, targetC - consumedC);
 
-  // 1. NUTRITION: 3 high-protein Indian vegetarian meals
-  if (p.includes('3 high-protein') || p.includes('indian vegetarian meals') || (p.includes('indian') && p.includes('vegetarian'))) {
-    return `Here are 3 high-protein Indian vegetarian meal options:
+  // Intent Matchers
+  const isPain = p.match(/pain|hurt|injury|aching|sore/);
+  const isKneePain = p.match(/knee|squat/);
+  const isBackPain = p.match(/back.*deadlift|deadlift.*back|back pain/);
+  
+  const isWeightGain = p.match(/gain weight|bulking|surplus|not gaining|muscle gain/);
+  const isWeightLoss = p.match(/lose weight|cutting|deficit|fat loss|not losing/);
+  
+  const isPreWorkout = p.match(/before.*workout|pre-workout/);
+  const isPostWorkout = p.match(/after.*workout|post-workout/);
+  const isMealIdea = p.match(/meal|dinner|lunch|breakfast|food|eat/);
+  
+  const isProtein = p.match(/protein/);
+  const isProgression = p.match(/progress|overload|stronger|increase|plateau/);
+  const isSets = p.match(/how many sets|volume/);
+  const isFrequency = p.match(/how many days|twice a week|enough/);
+  
+  const isWorkout = p.match(/workout|routine|training|gym/);
+  const isChestTriceps = p.match(/chest.*tricep|push/);
+  const isBackBiceps = p.match(/back.*bicep|pull/);
 
-1. **Paneer Bhurji + 2 Rotis**
-150g Paneer cooked with onions, tomatoes, and minimal oil.
-*Approx. 30–35g protein, 450 kcal*
-
-2. **Soya Chunk Curry + 1 Cup Rice**
-50g Soya chunks cooked in a tomato-onion gravy.
-*Approx. 25–30g protein, 350 kcal*
-
-3. **Dal Tadka + 1 Cup Rice + 100g Curd**
-A large bowl of thick dal (lentils) served with rice and a side of plain curd.
-*Approx. 20–25g protein, 450 kcal*
-
-You can adjust portion sizes depending on your remaining calories (${remainingC} kcal left today).`
-  }
-
-  // 2. PRE-WORKOUT NUTRITION
-  if (p.includes('eat before') && p.includes('workout')) {
-    return `Before a workout, your focus should be on **carbohydrates** for energy, with a moderate amount of protein. Keep fats and fiber low if you are eating close to your session, as they slow down digestion.
-
-**1–3 hours before training:**
-You can have a solid meal.
-*Examples:*
-- Poha + 1 bowl of curd
-- 2 rotis + dal + a small portion of paneer/chicken
-
-**30–60 minutes before training:**
-Keep it light and easy to digest.
-*Examples:*
-- 1 Banana + a small cup of curd
-- 1 Apple + 1 tbsp peanut butter
-- Oats boiled in milk with a banana
-
-Since you have ${remainingC} kcal remaining today, an oatmeal and banana bowl (approx. 300 kcal) is a great choice.`
-  }
-
-  // 3. POST-WORKOUT NUTRITION
-  if (p.includes('eat after') && p.includes('workout')) {
-    return `After your workout, your body needs **protein** to repair muscle tissue and **carbohydrates** to replenish glycogen stores.
-
-Here are some great options:
-
-1. **Quick Recovery:**
-1 scoop Whey Protein + 1 Banana + Water/Milk
-*(~25-30g protein, fast digesting)*
-
-2. **Vegetarian Meal:**
-150g Paneer + 2 Rotis + Salad
-*(~30-35g protein)*
-
-3. **Non-Vegetarian Meal:**
-150g Chicken Breast + 1 cup Rice + Dal
-*(~40-45g protein)*
-
-4. **Vegan/Plant-based:**
-Soya chunks + Rice + Curd (or vegan yogurt alternative)
-*(~35-40g protein)*
-
-Try to get a meal in within 1-2 hours after you finish training.`
-  }
-
-  // 4. PROTEIN BASED ON BODY WEIGHT
-  if (p.includes('how much protein') && p.includes('body weight')) {
-    if (weight) {
-      const lower = Math.round(weight * 1.6)
-      const upper = Math.round(weight * 2.2)
-      return `For muscle growth and maintenance, the standard evidence-based recommendation is 1.6g to 2.2g of protein per kg of body weight.
-
-Since you weigh ${weight}kg:
-${weight}kg × 1.6–2.2g/kg = **${lower}g to ${upper}g of protein per day.**
-
-Your current target is set to ${targetP}g, which aligns perfectly with this range.`
+  // 1. PAIN / INJURY
+  if (isPain) {
+    if (isKneePain) {
+      return `If squats are causing knee pain, don't push through sharp or worsening pain.\n\nFor now, try lower-stress alternatives:\n- Leg press (comfortable ROM)\n- Glute bridges\n- Hamstring curls\n- Step-ups\n\nReduce the load and check your form. If pain is severe, persistent, or involves swelling, see a physiotherapist.`;
     }
-    return `For muscle growth and maintenance, the standard evidence-based recommendation is **1.6g to 2.2g of protein per kg of body weight**.
-
-If you weigh 70kg, that means:
-70kg × 1.6–2.2g/kg = approximately 112g–154g of protein per day.
-
-If you update your profile with your current body weight, I can give you a personalized calculation.`
-  }
-
-  // PAIN: Deadlift back pain
-  if (p.includes('back') && (p.includes('deadlift') || p.includes('deadlifts'))) {
-    return `If deadlifts are causing back pain, don't continue loading the movement or try to push through the pain.
-
-For today's session, I'd skip heavy deadlifts and choose exercises that don't reproduce the pain.
-
-You could consider:
-
-• Seated/lying hamstring curl — 3 × 10–15
-• Leg extension — 3 × 10–15
-• Glute bridge — 3 × 10–15 if comfortable
-• Calf raises — 3 × 12–15
-• Light walking for a few minutes if comfortable
-
-If you want to train your back, choose a supported movement such as a chest-supported row ONLY if it is completely pain-free.
-
-Stop any movement that increases the pain.
-
-If the pain is severe, sudden, radiating down the leg, associated with numbness/weakness, or persists/worsens, get assessed by a qualified healthcare professional or physiotherapist.`
-  }
-
-  // PAIN: Knee pain squats
-  if (p.includes('instead of') && p.includes('squat')) {
-    return `If squats are causing knee pain, don't push through sharp or worsening pain.
-
-For now, you can try lower-impact alternatives such as:
-
-1. Glute bridges / hip thrusts
-2. Romanian deadlifts
-3. Hamstring curls
-4. Cable pull-throughs
-5. Step-ups, if they are comfortable
-6. Leg press with a comfortable range of motion, if pain-free
-
-For any exercise, use a range of motion and load that feels comfortable rather than forcing the movement.
-
-You can also temporarily reduce squat load and check whether factors like stance, depth, warm-up, and technique affect your comfort.
-
-If the pain is persistent, severe, worsening, associated with swelling/instability, or you cannot comfortably bear weight, stop the exercise and get assessed by a qualified healthcare professional or physiotherapist.`
-  }
-
-  // WEIGHT GAIN
-  if (p.includes('why am i not gaining weight') || p.includes('want to gain weight')) {
-    return `Most likely, you're not consistently eating enough calories to stay in a calorie surplus.
-
-If your goal is to gain weight, start by tracking your average body weight and calorie intake for 1–2 weeks.
-
-Here are the main things to check:
-
-1. **CALORIE SURPLUS**
-Aim for roughly 200–300 kcal above your maintenance calories.
-
-2. **PROTEIN**
-Aim for around 1.6–2.2g of protein per kg of body weight.
-
-3. **CONSISTENCY**
-Your weekly average matters more than one high-calorie day.
-
-4. **WEIGHT TREND**
-Weigh yourself under similar conditions several mornings per week and track the weekly average.
-
-5. **TRAINING**
-Use progressive resistance training so more of the gained weight can support muscle growth.
-
-If your weight has not increased for 2–3 weeks, increase your daily intake by another ~150–250 kcal.
-
-If you give me your current weight, daily calories, protein intake and how long you've been trying to gain weight, I can help you calculate a more specific target.`
-  }
-
-  // WORKOUT: Back and Biceps
-  if (p.includes('back and biceps') || p.includes('back and bicep')) {
-    return `### Back + Biceps
-
-**Warm-up**
-5–8 minutes
-
-**BACK**
-
-1. Lat Pulldown
-3 × 10–12
-Rest: 90 sec
-Cue: Drive elbows down, avoid swinging.
-
-2. Barbell Row
-3 × 8–10
-Rest: 2 min
-
-3. Seated Cable Row
-3 × 10–12
-Rest: 90 sec
-
-**BICEPS**
-
-4. Barbell Curl
-3 × 8–10
-Rest: 90 sec
-
-5. Hammer Curl
-3 × 10–12
-Rest: 60 sec
-
-**Duration:** 45–55 min
-
-**Progression:** Aim to increase the weight on Barbell Rows from your last session.`
-  }
-
-  // WORKOUT: Tomorrow's Chest and Triceps
-  if (p.includes("tomorrow") && p.includes("chest") && p.includes("triceps")) {
-    return `### Tomorrow — Chest + Triceps
-
-**Warm-up**
-5–8 minutes
-
-**CHEST**
-
-1. Bench Press
-3 × 8–10
-Rest: 2 min
-
-2. Incline Dumbbell Press
-3 × 10–12
-Rest: 90 sec
-
-3. Cable Crossovers
-3 × 12–15
-Rest: 60 sec
-
-**TRICEPS**
-
-4. Tricep Pushdowns
-3 × 10–12
-Rest: 60 sec
-
-5. Overhead Tricep Extension
-3 × 10–12
-Rest: 60 sec
-
-**Progression:** Try to add 2.5kg to your Bench Press tomorrow.`
+    if (isBackPain) {
+      return `1. Stop deadlifting for today if the movement is causing pain.\n2. Don't try to push through sharp/radiating pain.\n3. For today's session, use pain-free alternatives such as:\n   - Chest-supported row\n   - Lat pulldown\n   - Seated cable row\n   depending on what is comfortable.\n4. Review load, bracing, setup and technique before returning to deadlifts.\n5. If pain is severe, radiates into the leg, causes numbness/weakness, follows an injury, or persists, get evaluated by a healthcare professional.`;
+    }
+    return `If you are experiencing pain, stop the exercise causing it immediately. Don't push through sharp pain.\n\nSwitch to alternative exercises that train the same muscles but are completely pain-free. If the pain is severe, persistent, or worsening, please consult a medical professional or physiotherapist.`;
   }
   
-  // NUTRITION: 500 Calories Left / Dinner
-  if (p.includes('500 calories') || (p.includes('eat') && remainingC <= 500 && remainingC > 0)) {
-    return `You have approximately 500 kcal and ${remainingP}g protein remaining.
-
-I'd go with:
-
-🍗 **Chicken + Roti**
-150g chicken
-2 rotis
-100g curd
-
-≈ 500 kcal
-≈ 45g protein
-
-Vegetarian alternative:
-150g paneer + 1 roti + large salad
-
-≈ 500 kcal
-≈ 35g protein`
+  // 2. WEIGHT GAIN
+  if (isWeightGain) {
+    return `Most likely you're not consistently eating enough calories to stay in a surplus. \n\nIf you're training and your weight isn't increasing for 2–3 weeks, increase your daily intake by around 200–300 kcal. Keep protein around 1.6–2.2 g/kg bodyweight and track your morning weight 3–4 times per week.\n\n(Your current daily target is ${targetC} kcal).`;
   }
 
-  // PROGRESSION: Bench Press
-  if (p.includes('bench press') && p.includes('improve')) {
-    return `To improve your bench press, apply progressive overload using these methods:
-
-1. **Micro-loading:** Add just 1–2.5kg total to the bar each week.
-2. **Rep Progression:** If you hit 3x8 at 60kg, aim for 3x9 next time before adding weight.
-3. **Secondary Pressing:** Add a second, lighter chest day focusing on speed or variations like Incline or Pause Bench.
-4. **Triceps/Shoulders:** Strengthen your lock-out with overhead presses and tricep extensions.`
+  // 3. WEIGHT LOSS
+  if (isWeightLoss) {
+    return `If you're not losing weight, you are likely not in a calorie deficit. \n\nEnsure you are accurately tracking all food, oils, and liquids. If your weight hasn't dropped in 2 weeks, reduce your daily intake by 200–300 calories or increase your daily activity (e.g., add 2,000 steps).\n\n(Your current daily target is ${targetC} kcal).`;
   }
 
-  // RECOVERY: After leg day
-  if (p.includes('recover') && p.includes('leg day')) {
-    return `To optimize your recovery after a tough leg day, focus on these pillars:
-
-1. **Sleep:** Aim for 7-9 hours of quality sleep tonight. This is when the majority of physical repair occurs.
-2. **Nutrition:** Ensure you hit your daily protein target (currently ${targetP}g) and consume enough overall calories to support muscle repair.
-3. **Hydration:** Replenish fluids and electrolytes lost during your workout.
-4. **Active Recovery:** Tomorrow, do light activity like walking or mobility work to promote blood flow into the legs without adding fatigue.
-
-If you experience severe DOMS (soreness), avoid heavy lifting until the pain subsides to a manageable level.`
+  // 4. PRE/POST WORKOUT NUTRITION
+  if (isPreWorkout) {
+    return `For a workout in 60–90 minutes, have a meal containing 30–60g carbs and 15–25g protein. \n\nIndian options:\n- Banana + Curd\n- Poha + Curd\n- 2 Rotis + Paneer\n- Oats + Milk + Banana\n\nKeep fats and fiber low so it digests quickly.`;
+  }
+  
+  if (isPostWorkout) {
+    return `After your workout, consume 25–40g of high-quality protein to support recovery, along with some carbs.\n\nOptions:\n- 1 scoop Whey Protein + Banana\n- 150g Chicken Breast + Rice\n- 150g Paneer + 2 Rotis\n- Soya Chunk Pulao + Curd\n\nTry to eat within 1-2 hours of finishing your session.`;
+  }
+  
+  // 5. MEAL IDEAS
+  if (isMealIdea && (p.includes('indian') || p.includes('veg'))) {
+    return `Here are 3 high-protein Indian vegetarian meals:\n\n1. Paneer bhurji + 3 rotis + curd — ~35–40g protein\n2. Dal + rice + 100g paneer — ~35–40g protein\n3. Soya chunk pulao + curd — ~40–45g protein\n\nYou have ${remainingC} kcal and ${remainingP}g protein left today, so adjust portions to fit your targets.`;
+  }
+  
+  if (isMealIdea) {
+    return `Here are some great high-protein meal options:\n\n1. 150g Chicken breast + 1 cup rice + veggies\n2. 150g Paneer bhurji + 2 rotis\n3. 4 Whole eggs + 2 slices whole wheat toast\n\nYou have ${remainingC} kcal and ${remainingP}g protein left today.`;
   }
 
-  // Default Fallback
-  return `I can help with that. Could you provide a bit more specific detail on what you're trying to achieve with your current fitness or nutrition routine?`
+  // 6. PROTEIN
+  if (isProtein) {
+    const minP = Math.round(weight * 1.6);
+    const maxP = Math.round(weight * 2.2);
+    return `For muscle growth and maintenance, aim for 1.6–2.2g of protein per kg of bodyweight.\n\nFor your weight (${weight}kg), this is approximately **${minP}g – ${maxP}g of protein per day.**\n\n(Your current daily target is ${targetP}g).`;
+  }
+
+  // 7. PROGRESSION / GETTING STRONGER
+  if (isProgression) {
+    return `To increase your strength, apply Progressive Overload:\n\n1. **Micro-load:** Add just 1–2.5kg to the bar each week.\n2. **Rep Progression:** If you did 3x8 last week, aim for 3x9 this week before adding weight.\n3. **Improve Technique:** Dial in your form and bracing.\n4. **Eat/Sleep:** Ensure you are eating enough calories and sleeping 7-8 hours.`;
+  }
+
+  // 8. SETS & FREQUENCY
+  if (isSets) {
+    return `For muscle growth, aim for 10–20 working sets per muscle group per week.\n\nStart at the lower end (10-12 sets) and gradually increase if you are recovering well. Focus on pushing each set close to failure rather than just doing more volume.`;
+  }
+  
+  if (isFrequency) {
+    return `Training a muscle group twice a week is generally optimal for hypertrophy. \n\nYes, you can train chest (or any muscle) twice a week, provided you recover adequately between sessions. 4-5 days in the gym per week is more than enough for excellent muscle growth if you follow a well-structured split (like Push/Pull/Legs).`;
+  }
+
+  // 9. WORKOUTS
+  if (isWorkout || isChestTriceps || isBackBiceps) {
+    if (isChestTriceps || p.includes('chest')) {
+      return `### Chest + Triceps Workout\n\n## Warm-up\n5–8 minutes light cardio & dynamic stretching\n\n## Chest\n1. Bench Press — 3 × 8–10\n   Rest: 2 min\n2. Incline Dumbbell Press — 3 × 10–12\n   Rest: 90 sec\n3. Cable Crossovers — 3 × 12–15\n   Rest: 60 sec\n\n## Triceps\n4. Tricep Pushdowns — 3 × 10–12\n   Rest: 60 sec\n5. Overhead Tricep Extension — 3 × 10–12\n   Rest: 60 sec\n\n## Progression\nTry to add 1-2 reps or a small amount of weight compared to your last session.`;
+    }
+    
+    if (isBackBiceps || p.includes('back')) {
+      return `### Back + Biceps Workout\n\n## Warm-up\n5–8 minutes\n\n## Back\n1. Lat Pulldown — 3 × 10–12\n   Rest: 90 sec\n   Cue: Drive elbows down.\n2. Barbell Row — 3 × 8–10\n   Rest: 2 min\n   Cue: Keep torso controlled.\n3. Seated Cable Row — 3 × 10–12\n   Rest: 90 sec\n\n## Biceps\n4. Barbell Curl — 3 × 8–10\n   Rest: 90 sec\n5. Hammer Curl — 3 × 10–12\n   Rest: 60 sec\n\n## Progression\nTry to add 1-2 reps or a small amount of weight compared to your last session.`;
+    }
+    
+    return `### Full Body Workout\n\n## Warm-up\n5–8 minutes\n\n## Routine\n1. Goblet Squats — 3 × 8-10\n   Rest: 2 min\n2. Flat Dumbbell Press — 3 × 8-10\n   Rest: 90 sec\n3. Lat Pulldowns — 3 × 10-12\n   Rest: 90 sec\n4. Romanian Deadlifts — 3 × 10-12\n   Rest: 90 sec\n5. Dumbbell Lateral Raises — 3 × 12-15\n   Rest: 60 sec\n\n## Progression\nTry to add 1-2 reps or a small amount of weight compared to your last session.`;
+  }
+
+  // 10. GENERAL FALLBACK (Still useful, direct answer)
+  return `To achieve your fitness goals, focus on the fundamentals:\n\n1. **Nutrition:** Hit your calorie and protein targets consistently.\n2. **Training:** Follow a structured routine and apply progressive overload.\n3. **Recovery:** Get 7-9 hours of sleep and manage stress.\n\nCould you specify if you need help with a particular workout, a meal idea, or troubleshooting a plateau?`;
 }
 
 export async function POST(req: NextRequest) {

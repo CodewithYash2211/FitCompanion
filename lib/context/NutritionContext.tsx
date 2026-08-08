@@ -110,7 +110,7 @@ export function NutritionProvider({ children }: { children: React.ReactNode }) {
 
       // Use a DEDICATED key so it's independent from the workout seed version
       const nutritionVersion = localStorage.getItem('fc_nutrition_demo_version')
-      if (nutritionVersion !== 'v5') {
+      if (nutritionVersion !== 'v6') {
         const { generateDemoData } = require('../demoData')
         const demoData = generateDemoData()
         
@@ -129,7 +129,7 @@ export function NutritionProvider({ children }: { children: React.ReactNode }) {
         const stepsToInsert = demoData.stepsLog.filter((s: any) => !existingStepDays.has(new Date(s.date).setHours(0,0,0,0)))
         parsedStepsLog = [...stepsToInsert, ...parsedStepsLog].sort((a: any, b: any) => a.date - b.date)
 
-        localStorage.setItem('fc_nutrition_demo_version', 'v5')
+        localStorage.setItem('fc_nutrition_demo_version', 'v6')
       }
       
       setLoggedMeals(parsedMeals)

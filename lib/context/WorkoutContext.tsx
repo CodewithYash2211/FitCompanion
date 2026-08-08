@@ -173,7 +173,7 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
       
       // Use a DEDICATED key so it's independent from the nutrition seed version
       const workoutVersion = localStorage.getItem('fc_workout_demo_version')
-      if (workoutVersion !== 'v5') {
+      if (workoutVersion !== 'v6') {
         const { generateDemoData } = require('../demoData')
         const demoData = generateDemoData()
         
@@ -185,7 +185,7 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
         const toInsert = demoData.workouts.filter((w: any) => !existingIds.has(w.id))
         parsedHistory = [...toInsert, ...parsedHistory].sort((a: any, b: any) => a.startTime - b.startTime)
         
-        localStorage.setItem('fc_workout_demo_version', 'v5')
+        localStorage.setItem('fc_workout_demo_version', 'v6')
         localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify(parsedHistory))
       }
       
