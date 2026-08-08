@@ -74,12 +74,17 @@ export function FloatingNav() {
           return (
             <DropdownMenu key="profile-menu">
               <DropdownMenuTrigger
-                aria-label={label}
-                className={cn(
-                  'flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-2xl',
-                  'transition-all duration-200 min-w-[52px]',
-                  'text-muted-foreground outline-none'
-                )}
+                render={
+                  <button
+                    type="button"
+                    aria-label={label}
+                    className={cn(
+                      'flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-2xl',
+                      'transition-all duration-200 min-w-[52px]',
+                      'text-muted-foreground outline-none'
+                    )}
+                  />
+                }
               >
                 <Icon className="w-5 h-5 transition-all" />
                 <span className="text-[10px] font-medium">{label}</span>

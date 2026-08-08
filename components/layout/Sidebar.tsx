@@ -116,8 +116,8 @@ export function Sidebar() {
       {/* Upgrade CTA / User Footer */}
       <div className="px-4 mt-auto">
         <DropdownMenu>
-          <DropdownMenuTrigger className="w-full">
-            <div className="p-4 rounded-xl bg-[#121214] border border-[#27272a] shadow-sm flex flex-col gap-3 group hover:border-[#3f3f46] transition-colors cursor-pointer text-left">
+          <DropdownMenuTrigger render={<button type="button" className="w-full outline-none text-left" />}>
+            <div className="p-4 rounded-xl bg-[#121214] border border-[#27272a] shadow-sm flex flex-col gap-3 group hover:border-[#3f3f46] transition-colors cursor-pointer">
               <div className="flex items-center gap-2">
                 <Avatar className="w-8 h-8 rounded-full border border-[#27272a]">
                   <AvatarFallback className="bg-[#1c1c1f] text-xs font-semibold text-foreground">

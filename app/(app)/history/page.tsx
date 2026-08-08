@@ -11,6 +11,7 @@ import { aggregateDailyHistory, getCalendarDots, DailyHistory } from '@/services
 const DAYS_OF_WEEK = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
 export default function HistoryPage() {
+  const [isMounted, setIsMounted] = React.useState(false)
   const [currentDate, setCurrentDate] = React.useState(new Date())
   const [selectedDateStr, setSelectedDateStr] = React.useState<string>(() => {
     const d = new Date()
@@ -33,6 +34,12 @@ export default function HistoryPage() {
   const nextMonth = () => {
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))
   }
+
+  React.useEffect(() => {
+    setIsMounted(true)
+  }, [])
+
+  if (!isMounted) return null
 
   // Calendar logic
   const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate()
