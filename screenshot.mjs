@@ -1,6 +1,7 @@
 import puppeteer from 'puppeteer';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import fs from 'fs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -10,10 +11,19 @@ async function capture() {
   const browser = await puppeteer.launch({ headless: 'new' });
   const page = await browser.newPage();
   
+  const consoleLogs = [];
+  page.on('console', msg => {
+    if (msg.type() === 'error' || msg.type() === 'warning') {
+      consoleLogs.push(`[${msg.type().toUpperCase()}] ${msg.text()}`);
+    }
+  });
+  page.on('pageerror', error => {
+    consoleLogs.push(`[PAGE_ERROR] ${error.message}`);
+  });
+
   // Desktop
   await page.setViewport({ width: 1440, height: 900 });
   await page.goto('http://localhost:3000/dashboard', { waitUntil: 'networkidle0' });
-  // Wait a moment for animations to settle
   await new Promise(resolve => setTimeout(resolve, 2000));
   await page.screenshot({ path: path.join(BRAIN_DIR, 'real_dashboard_desktop.png'), fullPage: true });
 
@@ -28,7 +38,9 @@ async function capture() {
   await page.screenshot({ path: path.join(BRAIN_DIR, 'real_dashboard_mobile.png'), fullPage: true });
 
   await browser.close();
-  console.log('Screenshots captured successfully.');
+  
+  fs.writeFileSync('console_logs.txt', consoleLogs.join('\n'), 'utf-8');
+  console.log('Screenshots captured successfully. Console logs saved.');
 }
 
 capture().catch(console.error);

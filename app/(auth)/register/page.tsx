@@ -11,7 +11,6 @@ import { Loader2, ArrowRight } from 'lucide-react'
 import { registerSchema, type RegisterInput } from '@/lib/validations/auth'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Button } from '@/components/ui/button'
 import { PasswordInput } from '@/components/ui/password-input'
 
 export default function RegisterPage() {
@@ -27,7 +26,6 @@ export default function RegisterPage() {
     resolver: zodResolver(registerSchema),
   })
 
-  // Watch password for the strength indicator
   const passwordValue = watch('password', '')
 
   const onSubmit = async (data: RegisterInput) => {
@@ -45,12 +43,11 @@ export default function RegisterPage() {
         throw new Error(result.error || 'Failed to register')
       }
 
-      toast.success('Account created successfully!')
-      // Redirect to onboarding after successful registration
-      router.push('/auth/onboarding')
+      toast.success('Clearance granted.')
+      router.push('/onboarding')
       router.refresh()
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Something went wrong')
+      toast.error(error instanceof Error ? error.message : 'Registration failed')
     } finally {
       setIsLoading(false)
     }
@@ -58,107 +55,108 @@ export default function RegisterPage() {
 
   return (
     <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-700 ease-out fill-mode-both">
-      <div className="mb-8">
-        <h1 className="font-display font-bold text-3xl text-foreground mb-2">
-          Create account
+      <div className="mb-10 text-center">
+        <h1 className="font-display font-bold text-4xl uppercase tracking-tighter mb-3">
+          New Protocol
         </h1>
-        <p className="text-muted-foreground text-sm">
-          Start your fitness journey today.
+        <p className="text-white/50 font-medium">
+          Create your profile to start tracking.
         </p>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
         <div className="space-y-2">
-          <Label htmlFor="name">Full Name</Label>
+          <Label htmlFor="name" className="uppercase tracking-widest text-xs font-bold text-white/70">Full Name</Label>
           <Input
             id="name"
-            placeholder="John Doe"
+            placeholder="JANE DOE"
             disabled={isLoading}
-            className="h-11 bg-white/5 border-white/10 focus:border-brand-500/50"
+            className="h-12 bg-[#09090B] border-white/10 text-white placeholder:text-white/20 focus:border-white/50 rounded-none font-mono tracking-wider"
             {...register('name')}
           />
           {errors.name && (
-            <p className="text-sm font-medium text-danger animate-in fade-in">
+            <p className="text-xs font-bold text-danger uppercase tracking-wide animate-in fade-in">
               {errors.name.message}
             </p>
           )}
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="email">Email address</Label>
+          <Label htmlFor="email" className="uppercase tracking-widest text-xs font-bold text-white/70">Email Address</Label>
           <Input
             id="email"
             type="email"
-            placeholder="name@example.com"
+            placeholder="ACCESS_ID@DOMAIN.COM"
             disabled={isLoading}
-            className="h-11 bg-white/5 border-white/10 focus:border-brand-500/50"
+            className="h-12 bg-[#09090B] border-white/10 text-white placeholder:text-white/20 focus:border-white/50 rounded-none font-mono tracking-wider"
             {...register('email')}
           />
           {errors.email && (
-            <p className="text-sm font-medium text-danger animate-in fade-in">
+            <p className="text-xs font-bold text-danger uppercase tracking-wide animate-in fade-in">
               {errors.email.message}
             </p>
           )}
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="password">Password</Label>
+          <Label htmlFor="password" className="uppercase tracking-widest text-xs font-bold text-white/70">Secure Password</Label>
           <PasswordInput
             id="password"
-            placeholder="Create a strong password"
+            placeholder="••••••••"
             disabled={isLoading}
             showStrengthIndicator
-            value={passwordValue} // Needed for strength indicator to react
-            className="h-11 bg-white/5 border-white/10 focus:border-brand-500/50"
+            value={passwordValue}
+            className="h-12 bg-[#09090B] border-white/10 text-white focus:border-white/50 rounded-none font-mono"
             {...register('password')}
           />
           {errors.password && (
-            <p className="text-sm font-medium text-danger animate-in fade-in">
+            <p className="text-xs font-bold text-danger uppercase tracking-wide animate-in fade-in">
               {errors.password.message}
             </p>
           )}
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="confirmPassword">Confirm Password</Label>
+          <Label htmlFor="confirmPassword" className="uppercase tracking-widest text-xs font-bold text-white/70">Verify Password</Label>
           <PasswordInput
             id="confirmPassword"
-            placeholder="Confirm your password"
+            placeholder="••••••••"
             disabled={isLoading}
-            className="h-11 bg-white/5 border-white/10 focus:border-brand-500/50"
+            className="h-12 bg-[#09090B] border-white/10 text-white focus:border-white/50 rounded-none font-mono"
             {...register('confirmPassword')}
           />
           {errors.confirmPassword && (
-            <p className="text-sm font-medium text-danger animate-in fade-in">
+            <p className="text-xs font-bold text-danger uppercase tracking-wide animate-in fade-in">
               {errors.confirmPassword.message}
             </p>
           )}
         </div>
 
-        <Button
+        <button
           type="submit"
-          className="w-full h-11 bg-gradient-brand text-white text-sm font-semibold rounded-xl hover:opacity-90 hover:scale-[1.02] transition-all mt-4"
-          style={{ boxShadow: '0 4px 14px 0 rgba(124, 58, 237, 0.39)' }}
           disabled={isLoading}
+          className="w-full h-14 mt-6 bg-white text-black font-bold text-lg uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-white/90 active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none"
         >
           {isLoading ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            <Loader2 className="w-5 h-5 animate-spin" />
           ) : (
             <>
-              Create Account <ArrowRight className="ml-2 w-4 h-4" />
+              Deploy Profile <ArrowRight className="w-5 h-5" />
             </>
           )}
-        </Button>
+        </button>
       </form>
 
-      <div className="mt-8 text-center text-sm text-muted-foreground">
-        Already have an account?{' '}
-        <Link 
-          href="/auth/login" 
-          className="font-semibold text-foreground hover:text-brand-400 transition-colors"
-        >
-          Sign in
-        </Link>
+      <div className="mt-10 text-center border-t border-white/10 pt-8 flex flex-col gap-2">
+        <p className="text-sm font-bold text-white/40 uppercase tracking-widest">
+          Already have an account?{' '}
+          <Link 
+            href="/login" 
+            className="text-white hover:text-white/70 transition-colors"
+          >
+            Log In
+          </Link>
+        </p>
       </div>
     </div>
   )

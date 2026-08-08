@@ -22,7 +22,6 @@ export function QuickActions() {
             variant="action"
             delay={0.8 + (i * 0.05)}
             className="flex flex-col items-center justify-center gap-2 cursor-pointer"
-            noPadding
           >
             <Icon className="w-5 h-5 text-muted-foreground transition-colors group-hover:text-foreground" />
             <span className="text-xs font-medium text-muted-foreground transition-colors group-hover:text-foreground">{action.label}</span>

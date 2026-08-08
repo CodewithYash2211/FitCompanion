@@ -7,20 +7,34 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Salad, Plus, Dumbbell, User } from 'lucide-react'
+import { usePathname, useRouter } from 'next/navigation'
+import { LayoutDashboard, Salad, Plus, Dumbbell, User as UserIcon, LogOut, Settings } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useAuth } from '@/lib/context/AuthContext'
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator
+} from '@/components/ui/dropdown-menu'
 
 const navItems = [
   { href: '/dashboard',  icon: LayoutDashboard, label: 'Home' },
   { href: '/nutrition',  icon: Salad,            label: 'Nutrition' },
   null, // FAB placeholder
   { href: '/fitness',    icon: Dumbbell,         label: 'Fitness' },
-  { href: '/settings',   icon: User,             label: 'Profile' },
+  { isProfileMenu: true, icon: UserIcon,         label: 'Profile' },
 ]
 
 export function FloatingNav() {
   const pathname = usePathname()
+  const router = useRouter()
+  const { user, logout } = useAuth()
+  
+  const name = user?.name || 'User'
+  const email = user?.email || ''
 
   return (
     <nav
@@ -53,13 +67,55 @@ export function FloatingNav() {
           )
         }
 
-        const { href, icon: Icon, label } = item
-        const isActive = pathname === href || pathname.startsWith(href + '/')
+        const { href, icon: Icon, label, isProfileMenu } = item
+        const isActive = href ? (pathname === href || pathname.startsWith(href + '/')) : false
+
+        if (isProfileMenu) {
+          return (
+            <DropdownMenu key="profile-menu">
+              <DropdownMenuTrigger
+                aria-label={label}
+                className={cn(
+                  'flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-2xl',
+                  'transition-all duration-200 min-w-[52px]',
+                  'text-muted-foreground outline-none'
+                )}
+              >
+                <Icon className="w-5 h-5 transition-all" />
+                <span className="text-[10px] font-medium">{label}</span>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" side="top" sideOffset={16} className="w-[220px]">
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none">{name}</p>
+                    <p className="text-xs leading-none text-muted-foreground">
+                      {email}
+                    </p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => router.push('/settings')} className="cursor-pointer">
+                  <UserIcon className="mr-2 h-4 w-4" />
+                  <span>Profile</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => router.push('/settings')} className="cursor-pointer">
+                  <Settings className="mr-2 h-4 w-4" />
+                  <span>Settings</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={logout} className="cursor-pointer text-danger focus:text-danger">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Log out</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )
+        }
 
         return (
           <Link
             key={href}
-            href={href}
+            href={href as string}
             aria-label={label}
             aria-current={isActive ? 'page' : undefined}
             className={cn(

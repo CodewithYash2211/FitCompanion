@@ -2,7 +2,7 @@
 
 import * as React from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { motion, LayoutGroup } from 'framer-motion'
 import { 
   LayoutDashboard, 
@@ -13,9 +13,21 @@ import {
   LineChart,
   History,
   Settings,
-  Zap
+  Zap,
+  LogOut,
+  User as UserIcon
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useAuth } from '@/lib/context/AuthContext'
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator
+} from '@/components/ui/dropdown-menu'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 
 const NAV_ITEMS = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -30,6 +42,12 @@ const NAV_ITEMS = [
 
 export function Sidebar() {
   const pathname = usePathname()
+  const router = useRouter()
+  const { user, logout } = useAuth()
+  
+  const initial = user?.name ? user.name.charAt(0).toUpperCase() : 'U'
+  const name = user?.name || 'User'
+  const email = user?.email || ''
 
   return (
     <div className="w-64 h-screen border-r border-[#27272a] bg-[#0a0a0c] flex flex-col fixed left-0 top-0 pt-8 pb-6 z-40 shadow-[4px_0_24px_rgba(0,0,0,0.5)]">
@@ -97,17 +115,51 @@ export function Sidebar() {
 
       {/* Upgrade CTA / User Footer */}
       <div className="px-4 mt-auto">
-        <div className="p-4 rounded-xl bg-[#121214] border border-[#27272a] shadow-sm flex flex-col gap-3 group hover:border-[#3f3f46] transition-colors cursor-pointer">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-[#1c1c1f] border border-[#27272a] flex items-center justify-center text-xs font-semibold">
-              Y
+        <DropdownMenu>
+          <DropdownMenuTrigger className="w-full">
+            <div className="p-4 rounded-xl bg-[#121214] border border-[#27272a] shadow-sm flex flex-col gap-3 group hover:border-[#3f3f46] transition-colors cursor-pointer text-left">
+              <div className="flex items-center gap-2">
+                <Avatar className="w-8 h-8 rounded-full border border-[#27272a]">
+                  <AvatarFallback className="bg-[#1c1c1f] text-xs font-semibold text-foreground">
+                    {initial}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex flex-col overflow-hidden">
+                  <span className="text-sm font-medium text-foreground leading-none mb-1 truncate">
+                    {name}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground uppercase tracking-wider truncate">
+                    Premium Member
+                  </span>
+                </div>
+              </div>
             </div>
-            <div className="flex flex-col">
-              <span className="text-sm font-medium text-foreground leading-none mb-1">Yash</span>
-              <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Free Plan</span>
-            </div>
-          </div>
-        </div>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="center" className="w-[220px]">
+            <DropdownMenuLabel className="font-normal">
+              <div className="flex flex-col space-y-1">
+                <p className="text-sm font-medium leading-none">{name}</p>
+                <p className="text-xs leading-none text-muted-foreground">
+                  {email}
+                </p>
+              </div>
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => router.push('/settings')} className="cursor-pointer">
+              <UserIcon className="mr-2 h-4 w-4" />
+              <span>Profile</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => router.push('/settings')} className="cursor-pointer">
+              <Settings className="mr-2 h-4 w-4" />
+              <span>Settings</span>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={logout} className="cursor-pointer text-danger focus:text-danger">
+              <LogOut className="mr-2 h-4 w-4" />
+              <span>Log out</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </div>
   )

@@ -22,7 +22,7 @@ const PROTECTED_PREFIXES = [
 ]
 
 /** Routes that should redirect to /dashboard if already authenticated */
-const AUTH_ROUTES = ['/auth/login', '/auth/register']
+const AUTH_ROUTES = ['/login', '/register']
 
 // ─── JWT Verification ────────────────────────────────────────────────────────
 
@@ -68,10 +68,18 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
     return NextResponse.next()
   }
 
+  // Redirect from root to dashboard if authenticated
+  if (pathname === '/') {
+    if (isAuthenticated) {
+      return NextResponse.redirect(new URL('/dashboard', request.url))
+    }
+    return NextResponse.next()
+  }
+
   // ── Protect app routes ─────────────────────────────────────────────────────
   if (PROTECTED_PREFIXES.some((prefix) => pathname.startsWith(prefix))) {
     if (!isAuthenticated) {
-      const loginUrl = new URL('/auth/login', request.url)
+      const loginUrl = new URL('/login', request.url)
       loginUrl.searchParams.set('callbackUrl', pathname)
       return NextResponse.redirect(loginUrl)
     }
@@ -79,9 +87,9 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
   }
 
   // ── Onboarding — authenticated only ────────────────────────────────────────
-  if (pathname.startsWith('/auth/onboarding')) {
+  if (pathname.startsWith('/onboarding')) {
     if (!isAuthenticated) {
-      return NextResponse.redirect(new URL('/auth/login', request.url))
+      return NextResponse.redirect(new URL('/login', request.url))
     }
     return NextResponse.next()
   }

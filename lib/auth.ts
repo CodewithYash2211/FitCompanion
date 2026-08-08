@@ -9,7 +9,7 @@ import { cookies } from 'next/headers'
 import type { AuthTokenPayload } from '@/types'
 
 // Token expiry constants
-const ACCESS_TOKEN_EXPIRY = '15m'
+const ACCESS_TOKEN_EXPIRY = '7d'
 const REFRESH_TOKEN_EXPIRY = '7d'
 const REFRESH_COOKIE_NAME = 'fc_refresh_token'
 const ACCESS_COOKIE_NAME = 'fc_access_token'
@@ -110,7 +110,7 @@ export async function setAccessTokenCookie(token: string): Promise<void> {
     httpOnly: false, // Middleware can read it, and client can read it
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
-    maxAge: 15 * 60, // 15 minutes
+    maxAge: 7 * 24 * 60 * 60, // 7 days in seconds
     path: '/',
   })
 }
