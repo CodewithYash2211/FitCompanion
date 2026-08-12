@@ -99,9 +99,10 @@ export default function DashboardPage() {
   const dayWeightEntry = weights.find(w => w.date === targetDateStr)
   const currentWeight = dayWeightEntry ? dayWeightEntry.weight : (weights.length > 0 ? weights[weights.length - 1].weight : 0)
   
-  let goalWeight = currentWeight
-  if (profile.goal === 'lose_weight') goalWeight = currentWeight - 5
-  if (profile.goal === 'gain_weight') goalWeight = currentWeight + 5
+  let goalWeightText = "Not set"
+  if (profile.targetWeight) {
+    goalWeightText = `${profile.targetWeight} kg`
+  }
 
   let weightChange = 0
   if (weights.length > 1) {
@@ -357,13 +358,13 @@ export default function DashboardPage() {
                 <div className="font-display font-bold text-4xl tracking-tighter">
                   {currentWeight.toFixed(1)} <span className="text-xl text-white/50">kg</span>
                 </div>
-                <div className={`text-xs font-bold uppercase tracking-widest mt-1 ${weightChange < 0 ? 'text-success' : 'text-danger'}`}>
-                  {weightChange > 0 ? '+' : ''}{weightChange.toFixed(1)} kg since last
+                <div className={`text-xs font-bold uppercase tracking-widest mt-1 ${weights.length > 1 ? (weightChange < 0 ? 'text-success' : 'text-danger') : 'text-white/50'}`}>
+                  {weights.length > 1 ? `${weightChange > 0 ? '+' : ''}${weightChange.toFixed(1)} kg since last` : 'No prior data'}
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-white/50 font-bold uppercase tracking-widest text-[10px] mb-1">Goal</div>
-                <div className="font-bold text-lg">{goalWeight} kg</div>
+                <div className="text-white/50 font-bold uppercase tracking-widest text-[10px] mb-1">Target</div>
+                <div className="font-bold text-lg">{goalWeightText}</div>
               </div>
             </div>
           </div>

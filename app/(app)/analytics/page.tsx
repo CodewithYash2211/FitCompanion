@@ -43,17 +43,14 @@ export default function AnalyticsPage() {
   const activityData = aggregateActivity(waterLog, [], activeFilter) // Just for water now
   const prData = aggregatePRs(workoutHistory)
   
-  let targetWeightNum = currentWeight || 70
-  if (weights.length > 0) targetWeightNum = weights[0].weight
-  if (profile.goal === 'lose_weight') targetWeightNum -= 5
-  if (profile.goal === 'gain_weight') targetWeightNum += 5
+  const targetWeightNum = profile.targetWeight
 
   const weightProgress = React.useMemo(() => {
     if (weights.length === 0) return null
     const current = weights[weights.length - 1].weight
     const start = weights[0].weight
     const change = current - start
-    const remaining = targetWeightNum - current
+    const remaining = targetWeightNum ? (targetWeightNum - current) : null
     const totalDays = (new Date(weights[weights.length - 1].date).getTime() - new Date(weights[0].date).getTime()) / 86400000
     const weeks = Math.max(1, totalDays / 7)
     const avgWeeklyChange = change / weeks

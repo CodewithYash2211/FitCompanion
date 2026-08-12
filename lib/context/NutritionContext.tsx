@@ -108,30 +108,7 @@ export function NutritionProvider({ children }: { children: React.ReactNode }) {
         else if (parsed.steps) parsedStepsLog = [{ date: Date.now(), count: parsed.steps }]
       }
 
-      // Use a DEDICATED key so it's independent from the workout seed version
-      const nutritionVersion = localStorage.getItem('fc_nutrition_demo_version')
-      if (nutritionVersion !== 'v6') {
-        const { generateDemoData } = require('../demoData')
-        const demoData = generateDemoData()
-        
-        // Remove old demo meals — identified by isDemo flag OR ID range 1000–1999 (v3/v4 IDs)
-        parsedMeals = parsedMeals.filter((m: any) => !(m.isDemo || (typeof m.id === 'number' && m.id >= 1000 && m.id < 2000)))
 
-        const existingMealIds = new Set(parsedMeals.map((m: any) => m.id))
-        const mealsToInsert = demoData.meals.filter((m: any) => !existingMealIds.has(m.id))
-        parsedMeals = [...mealsToInsert, ...parsedMeals].sort((a: any, b: any) => (a.timestamp || 0) - (b.timestamp || 0))
-
-        const existingWaterDays = new Set(parsedWaterLog.map((w: any) => new Date(w.date).setHours(0,0,0,0)))
-        const waterToInsert = demoData.waterLog.filter((w: any) => !existingWaterDays.has(new Date(w.date).setHours(0,0,0,0)))
-        parsedWaterLog = [...waterToInsert, ...parsedWaterLog].sort((a: any, b: any) => a.date - b.date)
-
-        const existingStepDays = new Set(parsedStepsLog.map((s: any) => new Date(s.date).setHours(0,0,0,0)))
-        const stepsToInsert = demoData.stepsLog.filter((s: any) => !existingStepDays.has(new Date(s.date).setHours(0,0,0,0)))
-        parsedStepsLog = [...stepsToInsert, ...parsedStepsLog].sort((a: any, b: any) => a.date - b.date)
-
-        localStorage.setItem('fc_nutrition_demo_version', 'v6')
-      }
-      
       setLoggedMeals(parsedMeals)
       setWaterLog(parsedWaterLog)
       setStepsLog(parsedStepsLog)

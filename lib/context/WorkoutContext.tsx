@@ -171,23 +171,7 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
         parsedHistory = JSON.parse(savedHistory)
       }
       
-      // Use a DEDICATED key so it's independent from the nutrition seed version
-      const workoutVersion = localStorage.getItem('fc_workout_demo_version')
-      if (workoutVersion !== 'v6') {
-        const { generateDemoData } = require('../demoData')
-        const demoData = generateDemoData()
-        
-        // Remove ALL old demo workouts — identified by isDemo flag OR wk_demo_ ID prefix
-        parsedHistory = parsedHistory.filter((w: any) => !(w.isDemo || (typeof w.id === 'string' && w.id.startsWith('wk_demo_'))))
 
-        // Merge new demo workouts (skip any whose ID already exists in user data)
-        const existingIds = new Set(parsedHistory.map((w: any) => w.id))
-        const toInsert = demoData.workouts.filter((w: any) => !existingIds.has(w.id))
-        parsedHistory = [...toInsert, ...parsedHistory].sort((a: any, b: any) => a.startTime - b.startTime)
-        
-        localStorage.setItem('fc_workout_demo_version', 'v6')
-        localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify(parsedHistory))
-      }
       
       setWorkoutHistory(parsedHistory)
       

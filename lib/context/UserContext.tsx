@@ -13,11 +13,12 @@ export interface WeightEntry {
 
 export interface UserProfile {
   name: string
-  age: number
-  gender: 'male' | 'female' | 'other'
-  height: number // in cm
-  activityLevel: 'sedentary' | 'light' | 'moderate' | 'active' | 'very_active'
-  goal: 'lose_weight' | 'maintain' | 'gain_weight' | 'build_muscle'
+  age?: number
+  gender?: 'male' | 'female' | 'other'
+  height?: number // in cm
+  targetWeight?: number // in kg
+  activityLevel?: 'sedentary' | 'light' | 'moderate' | 'active' | 'very_active'
+  goal?: 'lose_weight' | 'maintain' | 'gain_weight' | 'build_muscle'
   dietaryPref?: 'vegetarian' | 'non_vegetarian' | 'vegan' | 'eggetarian'
   fitnessLevel?: 'beginner' | 'intermediate' | 'advanced'
   equipment?: 'gym' | 'home' | 'none'
@@ -48,14 +49,14 @@ const UserContext = React.createContext<UserContextType | undefined>(undefined)
 
 const DEFAULT_PROFILE: UserProfile = {
   name: '',
-  age: 21,
-  gender: 'male',
-  height: 175,
-  activityLevel: 'moderate',
-  goal: 'maintain',
-  dietaryPref: 'non_vegetarian',
-  fitnessLevel: 'beginner',
-  equipment: 'none'
+  age: undefined,
+  gender: undefined,
+  height: undefined,
+  activityLevel: undefined,
+  goal: undefined,
+  dietaryPref: undefined,
+  fitnessLevel: undefined,
+  equipment: undefined
 }
 
 const DEFAULT_TARGETS: UserTargets = {
@@ -114,11 +115,12 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       let activeProfile = { ...DEFAULT_PROFILE, name: user?.name || '' }
 
       // Priority 1: MongoDB Profile
-      if (user?.profile) {
-        const remoteProfile = user.profile
-        activeProfile = { ...activeProfile, ...remoteProfile }
+      if (user && user._id && user._id !== 'guest') {
+        if (user.profile && Object.keys(user.profile).length > 0) {
+          activeProfile = { ...activeProfile, ...user.profile }
+        }
       } else {
-        // Priority 2: LocalStorage Profile (with legacy mapping)
+        // Priority 2: LocalStorage Profile (only for guest/unauthenticated users)
         const savedStr = localStorage.getItem(STORAGE_KEY_PROFILE)
         if (savedStr) {
           const saved = JSON.parse(savedStr)

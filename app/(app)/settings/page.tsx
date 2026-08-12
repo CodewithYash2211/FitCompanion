@@ -23,6 +23,7 @@ const profileSchema = z.object({
   gender: z.enum(['male', 'female', 'other']),
   height: z.coerce.number().min(50, 'Height must be at least 50cm.'),
   weight: z.coerce.number().min(20, 'Weight must be at least 20kg.'),
+  targetWeight: z.coerce.number().min(20).optional(),
   goal: z.enum(['lose_weight', 'maintain', 'gain_weight', 'build_muscle']),
   activityLevel: z.enum(['sedentary', 'light', 'moderate', 'active', 'very_active']),
 })
@@ -55,6 +56,7 @@ export default function SettingsPage() {
       gender: profile.gender,
       height: profile.height,
       weight: currentWeight || 70,
+      targetWeight: profile.targetWeight || undefined,
       goal: profile.goal,
       activityLevel: profile.activityLevel,
     },
@@ -80,6 +82,7 @@ export default function SettingsPage() {
       gender: profile.gender,
       height: profile.height,
       weight: currentWeight || 70,
+      targetWeight: profile.targetWeight || undefined,
       goal: profile.goal,
       activityLevel: profile.activityLevel,
     })
@@ -101,6 +104,7 @@ export default function SettingsPage() {
         age: data.age,
         gender: data.gender,
         height: data.height,
+        targetWeight: data.targetWeight,
         goal: data.goal,
         activityLevel: data.activityLevel,
       })
@@ -213,6 +217,10 @@ export default function SettingsPage() {
                   <div className="space-y-2">
                     <Label>Current Weight (kg)</Label>
                     <Input type="number" {...profileForm.register('weight')} className="bg-black/50 border-white/10" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Target Weight (kg)</Label>
+                    <Input type="number" {...profileForm.register('targetWeight')} className="bg-black/50 border-white/10" placeholder="Not set" />
                   </div>
                   <div className="space-y-2">
                     <Label>Primary Goal</Label>

@@ -12,14 +12,15 @@ export default function OnboardingPage() {
 
   const [formData, setFormData] = React.useState({
     age: '',
-    gender: 'male',
+    gender: '',
     weight: '',
+    targetWeight: '',
     height: '',
-    goal: 'maintain',
-    activityLevel: 'moderate',
-    dietaryPref: 'non_vegetarian',
-    fitnessLevel: 'beginner',
-    equipment: 'none'
+    goal: '',
+    activityLevel: '',
+    dietaryPref: '',
+    fitnessLevel: '',
+    equipment: ''
   })
 
   const updateForm = (key: string, value: string) => {
@@ -27,7 +28,7 @@ export default function OnboardingPage() {
   }
 
   const validateStep1 = () => {
-    if (!formData.age || !formData.weight || !formData.height) {
+    if (!formData.age || !formData.weight || !formData.height || !formData.targetWeight || !formData.gender) {
       toast.error('Please fill in all fields')
       return false
     }
@@ -38,10 +39,11 @@ export default function OnboardingPage() {
     setIsLoading(true)
     try {
       const payload = {
-        age: parseInt(formData.age),
+        age: formData.age ? parseInt(formData.age) : undefined,
         gender: formData.gender,
-        weight: parseFloat(formData.weight),
-        height: parseFloat(formData.height),
+        weight: formData.weight ? parseFloat(formData.weight) : undefined,
+        height: formData.height ? parseFloat(formData.height) : undefined,
+        targetWeight: formData.targetWeight ? parseFloat(formData.targetWeight) : undefined,
         goal: formData.goal,
         activityLevel: formData.activityLevel,
         dietaryPref: formData.dietaryPref,
@@ -91,11 +93,26 @@ export default function OnboardingPage() {
             <div className="space-y-2">
               <label className="uppercase tracking-widest text-xs font-bold text-white/70">Gender</label>
               <select value={formData.gender} onChange={e => updateForm('gender', e.target.value)} className="w-full h-14 bg-[#09090B] border border-white/10 text-white focus:border-white/50 rounded-none px-4 outline-none font-mono uppercase text-sm">
+                <option value="" disabled>Select Gender</option>
                 <option value="male">Male</option>
                 <option value="female">Female</option>
                 <option value="other">Other</option>
               </select>
             </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="uppercase tracking-widest text-xs font-bold text-white/70">Weight (kg)</label>
+              <input type="number" value={formData.weight} onChange={e => updateForm('weight', e.target.value)} className="w-full h-14 bg-[#09090B] border border-white/10 text-white placeholder:text-white/20 focus:border-white/50 rounded-none px-4 outline-none font-mono text-lg" placeholder="75" />
+            </div>
+            <div className="space-y-2">
+              <label className="uppercase tracking-widest text-xs font-bold text-white/70">Height (cm)</label>
+              <input type="number" value={formData.height} onChange={e => updateForm('height', e.target.value)} className="w-full h-14 bg-[#09090B] border border-white/10 text-white placeholder:text-white/20 focus:border-white/50 rounded-none px-4 outline-none font-mono text-lg" placeholder="175" />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <label className="uppercase tracking-widest text-xs font-bold text-white/70">Target Weight (kg)</label>
+            <input type="number" value={formData.targetWeight} onChange={e => updateForm('targetWeight', e.target.value)} className="w-full h-14 bg-[#09090B] border border-white/10 text-white placeholder:text-white/20 focus:border-white/50 rounded-none px-4 outline-none font-mono text-lg" placeholder="70" />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -118,6 +135,7 @@ export default function OnboardingPage() {
           <div className="space-y-2">
             <label className="uppercase tracking-widest text-xs font-bold text-white/70">Primary Objective</label>
             <select value={formData.goal} onChange={e => updateForm('goal', e.target.value)} className="w-full h-14 bg-[#09090B] border border-white/10 text-white focus:border-white/50 rounded-none px-4 outline-none font-mono uppercase text-sm">
+              <option value="" disabled>Select Goal</option>
               <option value="lose_weight">Fat Loss</option>
               <option value="maintain">Maintenance</option>
               <option value="gain_weight">Gain Weight</option>
@@ -127,6 +145,7 @@ export default function OnboardingPage() {
           <div className="space-y-2">
             <label className="uppercase tracking-widest text-xs font-bold text-white/70">Activity Level</label>
             <select value={formData.activityLevel} onChange={e => updateForm('activityLevel', e.target.value)} className="w-full h-14 bg-[#09090B] border border-white/10 text-white focus:border-white/50 rounded-none px-4 outline-none font-mono uppercase text-sm">
+              <option value="" disabled>Select Activity Level</option>
               <option value="sedentary">Sedentary (0-1 days/wk)</option>
               <option value="light">Lightly Active (1-3 days/wk)</option>
               <option value="moderate">Moderately Active (3-5 days/wk)</option>
@@ -138,7 +157,13 @@ export default function OnboardingPage() {
             <button onClick={() => setStep(1)} className="flex-1 h-14 border border-white/20 text-white font-bold uppercase tracking-wider flex justify-center items-center hover:bg-white/5">
               Back
             </button>
-            <button onClick={() => setStep(3)} className="flex-1 h-14 bg-white text-black font-bold uppercase tracking-wider flex justify-center items-center hover:bg-white/90">
+            <button onClick={() => {
+              if (!formData.goal || !formData.activityLevel) {
+                toast.error('Please select both your goal and activity level')
+                return
+              }
+              setStep(3)
+            }} className="flex-1 h-14 bg-white text-black font-bold uppercase tracking-wider flex justify-center items-center hover:bg-white/90">
               Next Phase
             </button>
           </div>
@@ -150,6 +175,7 @@ export default function OnboardingPage() {
           <div className="space-y-2">
             <label className="uppercase tracking-widest text-xs font-bold text-white/70">Dietary Preference</label>
             <select value={formData.dietaryPref} onChange={e => updateForm('dietaryPref', e.target.value)} className="w-full h-14 bg-[#09090B] border border-white/10 text-white focus:border-white/50 rounded-none px-4 outline-none font-mono uppercase text-sm">
+              <option value="" disabled>Select Preference</option>
               <option value="non_vegetarian">Non-Vegetarian</option>
               <option value="vegetarian">Vegetarian</option>
               <option value="vegan">Vegan</option>
@@ -160,6 +186,7 @@ export default function OnboardingPage() {
             <div className="space-y-2">
               <label className="uppercase tracking-widest text-xs font-bold text-white/70">Fitness Level</label>
               <select value={formData.fitnessLevel} onChange={e => updateForm('fitnessLevel', e.target.value)} className="w-full h-14 bg-[#09090B] border border-white/10 text-white focus:border-white/50 rounded-none px-4 outline-none font-mono uppercase text-sm">
+                <option value="" disabled>Select Level</option>
                 <option value="beginner">Beginner</option>
                 <option value="intermediate">Intermediate</option>
                 <option value="advanced">Advanced</option>
@@ -168,6 +195,7 @@ export default function OnboardingPage() {
             <div className="space-y-2">
               <label className="uppercase tracking-widest text-xs font-bold text-white/70">Equipment</label>
               <select value={formData.equipment} onChange={e => updateForm('equipment', e.target.value)} className="w-full h-14 bg-[#09090B] border border-white/10 text-white focus:border-white/50 rounded-none px-4 outline-none font-mono uppercase text-sm">
+                <option value="" disabled>Select Equipment</option>
                 <option value="none">None (Bodyweight)</option>
                 <option value="home">Home Gym</option>
                 <option value="gym">Full Gym</option>
@@ -178,7 +206,13 @@ export default function OnboardingPage() {
             <button onClick={() => setStep(2)} className="flex-1 h-14 border border-white/20 text-white font-bold uppercase tracking-wider flex justify-center items-center hover:bg-white/5">
               Back
             </button>
-            <button onClick={() => setStep(4)} className="flex-1 h-14 bg-white text-black font-bold uppercase tracking-wider flex justify-center items-center hover:bg-white/90">
+            <button onClick={() => {
+              if (!formData.dietaryPref || !formData.fitnessLevel || !formData.equipment) {
+                toast.error('Please complete all preferences')
+                return
+              }
+              setStep(4)
+            }} className="flex-1 h-14 bg-white text-black font-bold uppercase tracking-wider flex justify-center items-center hover:bg-white/90">
               Review
             </button>
           </div>
