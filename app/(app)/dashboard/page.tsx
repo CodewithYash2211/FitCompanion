@@ -13,12 +13,7 @@ import { toast } from 'sonner'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useHistoryStore, getLocalDateString } from '@/lib/historyStore'
-
-const NOTIFICATIONS = [
-  { id: 1, text: "You missed your water target yesterday. Hydrate!", time: "2h ago", unread: true },
-  { id: 2, text: "Workout completed: Upper Body Power", time: "5h ago", unread: true },
-  { id: 3, text: "Protein goal hit for 3 consecutive days! 🔥", time: "1d ago", unread: false },
-]
+import { useAuth } from '@/lib/context/AuthContext'
 
 function AnimatedProgress({ value, max }: { value: number, max: number }) {
   const pct = Math.min(100, Math.max(0, (value / (max || 1)) * 100))
@@ -36,15 +31,16 @@ function AnimatedProgress({ value, max }: { value: number, max: number }) {
 
 export default function DashboardPage() {
   const router = useRouter()
+  const { user } = useAuth()
   const [isLoaded, setIsLoaded] = React.useState(false)
   const [activeFilter, setActiveFilter] = React.useState<DateRangeFilter>('today')
   const [showNotifications, setShowNotifications] = React.useState(false)
-  const [notifications, setNotifications] = React.useState(NOTIFICATIONS)
+  const [notifications, setNotifications] = React.useState<{id:number, text:string, time:string, unread:boolean}[]>([])
 
   const { loggedMeals, waterLog } = useNutrition()
   const { workoutHistory } = useWorkout()
   const { profile, targets } = useUser()
-  const { weights, steps } = useHistoryStore()
+  const { weights, steps } = useHistoryStore(user?._id || 'guest')
   
   React.useEffect(() => {
     setIsLoaded(true)
@@ -197,20 +193,26 @@ export default function DashboardPage() {
                        <button onClick={markAllRead} className="text-[10px] font-bold text-white hover:text-white/70 uppercase">Mark All Read</button>
                      )}
                    </div>
-                   <div className="max-h-80 overflow-y-auto">
-                     {notifications.map(n => (
-                       <div key={n.id} className={`p-4 border-b border-white/5 flex gap-3 ${n.unread ? 'bg-white/[0.02]' : 'opacity-60'}`}>
-                         <div className="mt-1">
-                           {n.unread ? <div className="w-2 h-2 rounded-full bg-danger" /> : <Check className="w-3 h-3 text-white/40" />}
-                         </div>
-                         <div>
-                           <p className="text-sm font-medium text-white/90 leading-snug">{n.text}</p>
-                           <p className="text-[10px] font-bold uppercase tracking-widest text-white/30 mt-2">{n.time}</p>
-                         </div>
-                       </div>
-                     ))}
-                   </div>
-                 </motion.div>
+                    <div className="max-h-80 overflow-y-auto">
+                      {notifications.length === 0 ? (
+                        <div className="p-4 text-center text-white/50 text-xs font-bold uppercase tracking-widest">
+                          No notifications yet.
+                        </div>
+                      ) : (
+                        notifications.map(n => (
+                          <div key={n.id} className={`p-4 border-b border-white/5 flex gap-3 ${n.unread ? 'bg-white/[0.02]' : 'opacity-60'}`}>
+                            <div className="mt-1">
+                              {n.unread ? <div className="w-2 h-2 rounded-full bg-danger" /> : <Check className="w-3 h-3 text-white/40" />}
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium text-white/90 leading-snug">{n.text}</p>
+                              <p className="text-[10px] font-bold uppercase tracking-widest text-white/30 mt-2">{n.time}</p>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </motion.div>
                )}
              </AnimatePresence>
            </div>
@@ -246,13 +248,13 @@ export default function DashboardPage() {
                 </div>
                 <div className="text-right">
                   <div className="text-white/50 font-bold uppercase tracking-widest text-xs mb-1">Target</div>
-                  <div className="font-bold text-xl">{targets.calories.toLocaleString()}</div>
+                  <div className="font-bold text-xl">{targets.calories > 0 ? targets.calories.toLocaleString() : 'Not set'}</div>
                 </div>
               </div>
-              <AnimatedProgress value={consumedKcal} max={targets.calories} />
+              <AnimatedProgress value={consumedKcal} max={targets.calories || 1} />
               <div className="mt-4 flex justify-between text-xs font-bold uppercase tracking-widest text-white/40">
                 <span>Burned Active: {workoutCalories}</span>
-                <span>Remaining: {Math.max(0, targets.calories - consumedKcal).toLocaleString()}</span>
+                <span>Remaining: {targets.calories > 0 ? Math.max(0, targets.calories - consumedKcal).toLocaleString() : 'N/A'}</span>
               </div>
             </div>
 
@@ -262,24 +264,24 @@ export default function DashboardPage() {
               <div className="space-y-4">
                 <div>
                   <div className="flex justify-between text-sm font-bold uppercase tracking-widest mb-1">
-                    <span className="text-white">Protein <span className="text-white/40">({targets.protein}g)</span></span>
+                    <span className="text-white">Protein <span className="text-white/40">({targets.protein > 0 ? `${targets.protein}g` : 'Not set'})</span></span>
                     <span>{consumedProtein}g</span>
                   </div>
-                  <AnimatedProgress value={consumedProtein} max={targets.protein} />
+                  <AnimatedProgress value={consumedProtein} max={targets.protein || 1} />
                 </div>
                 <div>
                   <div className="flex justify-between text-sm font-bold uppercase tracking-widest mb-1">
-                    <span className="text-white">Carbs <span className="text-white/40">({targets.carbs}g)</span></span>
+                    <span className="text-white">Carbs <span className="text-white/40">({targets.carbs > 0 ? `${targets.carbs}g` : 'Not set'})</span></span>
                     <span>{consumedCarbs}g</span>
                   </div>
-                  <AnimatedProgress value={consumedCarbs} max={targets.carbs} />
+                  <AnimatedProgress value={consumedCarbs} max={targets.carbs || 1} />
                 </div>
                 <div>
                   <div className="flex justify-between text-sm font-bold uppercase tracking-widest mb-1">
-                    <span className="text-white">Fat <span className="text-white/40">({targets.fat}g)</span></span>
+                    <span className="text-white">Fat <span className="text-white/40">({targets.fat > 0 ? `${targets.fat}g` : 'Not set'})</span></span>
                     <span>{consumedFat}g</span>
                   </div>
-                  <AnimatedProgress value={consumedFat} max={targets.fat} />
+                  <AnimatedProgress value={consumedFat} max={targets.fat || 1} />
                 </div>
               </div>
             </div>
@@ -293,16 +295,22 @@ export default function DashboardPage() {
                 <div className="font-display font-bold text-3xl tracking-tighter mb-1">
                   {(dayWater / 1000).toFixed(1)} <span className="text-lg text-white/50">L</span>
                 </div>
-                <AnimatedProgress value={dayWater} max={targets.water} />
+                <div className="text-xs font-bold uppercase tracking-widest text-white/40 mb-2">
+                  Target: {targets.water > 0 ? `${targets.water / 1000}L` : 'Not set'}
+                </div>
+                <AnimatedProgress value={dayWater} max={targets.water || 1} />
               </div>
               <div>
                 <div className="flex items-center gap-2 text-white/50 font-bold uppercase tracking-widest text-xs mb-2">
                   <Footprints className="w-4 h-4 text-[#10b981]" /> Steps
                 </div>
                 <div className="font-display font-bold text-3xl tracking-tighter mb-1">
-                  {daySteps.toLocaleString()} <span className="text-lg text-white/50">/ {targets.steps.toLocaleString()}</span>
+                  {daySteps.toLocaleString()} <span className="text-lg text-white/50">{targets.steps > 0 ? `/ ${targets.steps.toLocaleString()}` : ''}</span>
                 </div>
-                <AnimatedProgress value={daySteps} max={targets.steps} />
+                <div className="text-xs font-bold uppercase tracking-widest text-white/40 mb-2">
+                  Target: {targets.steps > 0 ? targets.steps.toLocaleString() : 'Not set'}
+                </div>
+                <AnimatedProgress value={daySteps} max={targets.steps || 1} />
               </div>
             </div>
           </div>

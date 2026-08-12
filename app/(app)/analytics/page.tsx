@@ -14,8 +14,10 @@ import { Plus, Target, Flame, Dumbbell, Droplet, Check, Zap, Footprints, Scale, 
 import { toast } from 'sonner'
 import Link from 'next/link'
 import { useHistoryStore } from '@/lib/historyStore'
+import { useAuth } from '@/lib/context/AuthContext'
 
 export default function AnalyticsPage() {
+  const { user } = useAuth()
   const [isLoaded, setIsLoaded] = React.useState(false)
   const [activeFilter, setActiveFilter] = React.useState<DateRangeFilter>('30d')
   const [nutritionMetric, setNutritionMetric] = React.useState<'calories' | 'protein' | 'carbs'>('calories')
@@ -23,7 +25,7 @@ export default function AnalyticsPage() {
   const { loggedMeals, waterLog } = useNutrition()
   const { workoutHistory } = useWorkout()
   const { profile, targets, currentWeight } = useUser()
-  const { weights, steps, saveWeight } = useHistoryStore()
+  const { weights, steps, saveWeight } = useHistoryStore(user?._id || 'guest')
 
   const [showWeightModal, setShowWeightModal] = React.useState(false)
   const [weightInput, setWeightInput] = React.useState('')

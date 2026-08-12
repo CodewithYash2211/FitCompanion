@@ -60,12 +60,12 @@ const DEFAULT_PROFILE: UserProfile = {
 }
 
 const DEFAULT_TARGETS: UserTargets = {
-  calories: 2600,
-  protein: 160,
-  carbs: 300,
-  fat: 80,
-  water: 3000,
-  steps: 10000
+  calories: 0,
+  protein: 0,
+  carbs: 0,
+  fat: 0,
+  water: 0,
+  steps: 0
 }
 
 // Helpers for backward compatibility
