@@ -7,10 +7,12 @@ import { useNutrition } from '@/lib/context/NutritionContext'
 import { useWorkout, EXERCISE_DB } from '@/lib/context/WorkoutContext'
 import { useHistoryStore } from '@/lib/historyStore'
 import { aggregateDailyHistory, getCalendarDots, DailyHistory } from '@/services/history'
+import { useAuth } from '@/lib/context/AuthContext'
 
 const DAYS_OF_WEEK = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
 export default function HistoryPage() {
+  const { user, isLoading } = useAuth()
   const [isMounted, setIsMounted] = React.useState(false)
   const [currentDate, setCurrentDate] = React.useState(new Date())
   const [selectedDateStr, setSelectedDateStr] = React.useState<string>(() => {
@@ -21,7 +23,7 @@ export default function HistoryPage() {
 
   const { loggedMeals, waterLog } = useNutrition()
   const { workoutHistory } = useWorkout()
-  const { weights, steps } = useHistoryStore()
+  const { weights, steps } = useHistoryStore(isLoading ? null : (user?._id || null))
 
   const aggregatedData = React.useMemo(() => {
     return aggregateDailyHistory(loggedMeals, waterLog, workoutHistory, weights, steps)
@@ -39,7 +41,17 @@ export default function HistoryPage() {
     setIsMounted(true)
   }, [])
 
-  if (!isMounted) return null
+  if (!isMounted || isLoading) {
+    return (
+      <div className="p-4 md:p-8 min-h-screen bg-[#05050A] animate-pulse">
+        <div className="h-10 bg-white/5 w-1/4 mb-8" />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="h-96 bg-white/5 lg:col-span-2 rounded-3xl" />
+          <div className="h-96 bg-white/5 lg:col-span-1 rounded-3xl" />
+        </div>
+      </div>
+    )
+  }
 
   // Calendar logic
   const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate()

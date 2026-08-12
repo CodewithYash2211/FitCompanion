@@ -31,7 +31,7 @@ function AnimatedProgress({ value, max }: { value: number, max: number }) {
 
 export default function DashboardPage() {
   const router = useRouter()
-  const { user } = useAuth()
+  const { user, isLoading } = useAuth()
   const [isLoaded, setIsLoaded] = React.useState(false)
   const [activeFilter, setActiveFilter] = React.useState<DateRangeFilter>('today')
   const [showNotifications, setShowNotifications] = React.useState(false)
@@ -40,13 +40,13 @@ export default function DashboardPage() {
   const { loggedMeals, waterLog } = useNutrition()
   const { workoutHistory } = useWorkout()
   const { profile, targets } = useUser()
-  const { weights, steps } = useHistoryStore(user?._id || 'guest')
+  const { weights, steps } = useHistoryStore(isLoading ? null : (user?._id || null))
   
   React.useEffect(() => {
     setIsLoaded(true)
   }, [])
 
-  if (!isLoaded) {
+  if (!isLoaded || isLoading) {
     return (
       <div className="p-8 space-y-8 animate-pulse bg-[#020202] min-h-screen">
         <div className="h-20 bg-white/5 w-1/3" />

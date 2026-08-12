@@ -90,14 +90,19 @@ export function resetDemoHistory(userId: string = 'guest') {
   window.dispatchEvent(new Event(`fc_history_updated_${userId}`))
 }
 
-export function useHistoryStore(userId: string = 'guest') {
+export function useHistoryStore(userId: string | null) {
   const [weights, setWeights] = useState<WeightHistoryEntry[]>([])
   const [steps, setSteps] = useState<StepsHistoryEntry[]>([])
   const [isHydrated, setIsHydrated] = useState(false)
   
   useEffect(() => {
-    // seedHistoryIfEmpty(userId) - Disabled
-    
+    if (!userId) {
+      setWeights([])
+      setSteps([])
+      setIsHydrated(false)
+      return
+    }
+
     const update = () => {
       setWeights(getWeightHistory(userId))
       setSteps(getStepsHistory(userId))
@@ -111,8 +116,12 @@ export function useHistoryStore(userId: string = 'guest') {
     return () => window.removeEventListener(eventName, update)
   }, [userId])
   
-  const saveWeightAction = (weight: number, dateMs?: number) => saveWeight(userId, weight, dateMs)
-  const saveStepsAction = (steps: number, dateMs?: number) => saveSteps(userId, steps, dateMs)
+  const saveWeightAction = (weight: number, dateMs?: number) => {
+    if (userId) saveWeight(userId, weight, dateMs)
+  }
+  const saveStepsAction = (steps: number, dateMs?: number) => {
+    if (userId) saveSteps(userId, steps, dateMs)
+  }
   
   return { weights, steps, isHydrated, saveWeight: saveWeightAction, saveSteps: saveStepsAction }
 }

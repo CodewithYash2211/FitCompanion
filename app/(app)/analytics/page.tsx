@@ -17,7 +17,7 @@ import { useHistoryStore } from '@/lib/historyStore'
 import { useAuth } from '@/lib/context/AuthContext'
 
 export default function AnalyticsPage() {
-  const { user } = useAuth()
+  const { user, isLoading } = useAuth()
   const [isLoaded, setIsLoaded] = React.useState(false)
   const [activeFilter, setActiveFilter] = React.useState<DateRangeFilter>('30d')
   const [nutritionMetric, setNutritionMetric] = React.useState<'calories' | 'protein' | 'carbs'>('calories')
@@ -25,7 +25,7 @@ export default function AnalyticsPage() {
   const { loggedMeals, waterLog } = useNutrition()
   const { workoutHistory } = useWorkout()
   const { profile, targets, currentWeight } = useUser()
-  const { weights, steps, saveWeight } = useHistoryStore(user?._id || 'guest')
+  const { weights, steps, saveWeight } = useHistoryStore(isLoading ? null : (user?._id || null))
 
   const [showWeightModal, setShowWeightModal] = React.useState(false)
   const [weightInput, setWeightInput] = React.useState('')
@@ -59,10 +59,10 @@ export default function AnalyticsPage() {
     return { current, start, change, remaining, avgWeeklyChange }
   }, [weights, targetWeightNum])
 
-  if (!isLoaded) {
+  if (!isLoaded || isLoading) {
     return (
       <div className="p-8 space-y-8 animate-pulse bg-[#020202] min-h-screen">
-        <div className="h-20 bg-white/5 w-1/3" />
+        <div className="h-10 bg-white/5 w-1/4 mb-8" />
         <div className="h-64 bg-white/5" />
       </div>
     )
