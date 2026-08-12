@@ -104,7 +104,7 @@ export default function AICoachPage() {
         weight: currentWeight ? `${currentWeight}kg` : "Not provided",
         height: profile.height ? `${profile.height}cm` : "Not provided",
         age: profile.age,
-        sex: profile.sex,
+        gender: profile.gender,
         activityLevel: profile.activityLevel
       },
       nutrition: {

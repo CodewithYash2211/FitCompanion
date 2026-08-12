@@ -50,3 +50,11 @@ export const onboardingSchema = z.object({
 })
 
 export type OnboardingInput = z.infer<typeof onboardingSchema>
+
+export const profileUpdateSchema = onboardingSchema.partial().extend({
+  name: z.string().min(2).max(50).optional(),
+  dailyCalorieGoal: z.coerce.number().min(500).optional(),
+  dailyWaterGoal: z.coerce.number().min(500).optional(),
+})
+
+export type ProfileUpdateInput = z.infer<typeof profileUpdateSchema>

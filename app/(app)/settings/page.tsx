@@ -20,11 +20,11 @@ import { calculateTDEE } from '@/lib/calculations'
 const profileSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters.'),
   age: z.coerce.number().min(12, 'Age must be at least 12.'),
-  sex: z.enum(['Male', 'Female', 'Other']),
+  gender: z.enum(['male', 'female', 'other']),
   height: z.coerce.number().min(50, 'Height must be at least 50cm.'),
   weight: z.coerce.number().min(20, 'Weight must be at least 20kg.'),
-  goal: z.enum(['Lose Weight', 'Maintain Weight', 'Gain Weight']),
-  activityLevel: z.enum(['Sedentary', 'Lightly Active', 'Moderately Active', 'Very Active', 'Extremely Active']),
+  goal: z.enum(['lose_weight', 'maintain', 'gain_weight', 'build_muscle']),
+  activityLevel: z.enum(['sedentary', 'light', 'moderate', 'active', 'very_active']),
 })
 
 type ProfileInput = z.infer<typeof profileSchema>
@@ -52,7 +52,7 @@ export default function SettingsPage() {
     defaultValues: {
       name: profile.name,
       age: profile.age,
-      sex: profile.sex,
+      gender: profile.gender,
       height: profile.height,
       weight: currentWeight || 70,
       goal: profile.goal,
@@ -77,7 +77,7 @@ export default function SettingsPage() {
     profileForm.reset({
       name: profile.name,
       age: profile.age,
-      sex: profile.sex,
+      gender: profile.gender,
       height: profile.height,
       weight: currentWeight || 70,
       goal: profile.goal,
@@ -99,7 +99,7 @@ export default function SettingsPage() {
       await updateProfile({
         name: data.name,
         age: data.age,
-        sex: data.sex,
+        gender: data.gender,
         height: data.height,
         goal: data.goal,
         activityLevel: data.activityLevel,
@@ -113,7 +113,7 @@ export default function SettingsPage() {
   const onTargetsSubmit = async (data: TargetsInput) => {
     setIsSavingTargets(true)
     try {
-      updateTargets(data)
+      await updateTargets(data)
     } finally {
       setIsSavingTargets(false)
     }
@@ -121,12 +121,11 @@ export default function SettingsPage() {
 
   const autoCalculateTargets = () => {
     const p = profileForm.getValues()
-    const sexStr = p.sex.toLowerCase() as 'male' | 'female'
-    const tdeeResult = calculateTDEE(p.weight, p.height, p.age, sexStr, p.activityLevel as any)
+    const tdeeResult = calculateTDEE(p.weight, p.height, p.age, p.gender, p.activityLevel as any)
     
     let kcal = tdeeResult.maintenance
-    if (p.goal === 'Lose Weight') kcal = tdeeResult.deficit
-    if (p.goal === 'Gain Weight') kcal = tdeeResult.surplus
+    if (p.goal === 'lose_weight') kcal = tdeeResult.deficit
+    if (p.goal === 'gain_weight' || p.goal === 'build_muscle') kcal = tdeeResult.surplus
     
     // Very basic macro split: 30% P, 40% C, 30% F
     const protein = Math.round((kcal * 0.3) / 4)
@@ -195,15 +194,15 @@ export default function SettingsPage() {
                     <Input type="number" {...profileForm.register('age')} className="bg-black/50 border-white/10" />
                   </div>
                   <div className="space-y-2">
-                    <Label>Sex</Label>
-                    <Select onValueChange={(v) => profileForm.setValue('sex', v as any)} value={profileForm.watch('sex')}>
+                    <Label>Gender</Label>
+                    <Select onValueChange={(v) => profileForm.setValue('gender', v as any)} value={profileForm.watch('gender')}>
                       <SelectTrigger className="bg-black/50 border-white/10">
-                        <SelectValue placeholder="Select sex" />
+                        <SelectValue placeholder="Select gender" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Male">Male</SelectItem>
-                        <SelectItem value="Female">Female</SelectItem>
-                        <SelectItem value="Other">Other</SelectItem>
+                        <SelectItem value="male">Male</SelectItem>
+                        <SelectItem value="female">Female</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -222,9 +221,10 @@ export default function SettingsPage() {
                         <SelectValue placeholder="Select goal" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Lose Weight">Lose Weight</SelectItem>
-                        <SelectItem value="Maintain Weight">Maintain Weight</SelectItem>
-                        <SelectItem value="Gain Weight">Gain Weight</SelectItem>
+                        <SelectItem value="lose_weight">Lose Weight</SelectItem>
+                        <SelectItem value="maintain">Maintain Weight</SelectItem>
+                        <SelectItem value="gain_weight">Gain Weight</SelectItem>
+                        <SelectItem value="build_muscle">Build Muscle</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -235,11 +235,11 @@ export default function SettingsPage() {
                         <SelectValue placeholder="Select activity level" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Sedentary">Sedentary (0-1 days/wk)</SelectItem>
-                        <SelectItem value="Lightly Active">Lightly Active (1-3 days/wk)</SelectItem>
-                        <SelectItem value="Moderately Active">Moderately Active (3-5 days/wk)</SelectItem>
-                        <SelectItem value="Very Active">Very Active (6-7 days/wk)</SelectItem>
-                        <SelectItem value="Extremely Active">Extremely Active (Athlete)</SelectItem>
+                        <SelectItem value="sedentary">Sedentary (0-1 days/wk)</SelectItem>
+                        <SelectItem value="light">Lightly Active (1-3 days/wk)</SelectItem>
+                        <SelectItem value="moderate">Moderately Active (3-5 days/wk)</SelectItem>
+                        <SelectItem value="active">Very Active (6-7 days/wk)</SelectItem>
+                        <SelectItem value="very_active">Athlete</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

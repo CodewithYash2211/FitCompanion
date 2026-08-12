@@ -8,17 +8,18 @@ import { Activity, Flame, Save, RefreshCw, ChevronRight } from 'lucide-react'
 
 // Utilities
 const ACTIVITY_MULTIPLIERS = {
-  'Sedentary': 1.2,
-  'Lightly Active': 1.375,
-  'Moderately Active': 1.55,
-  'Very Active': 1.725,
-  'Extremely Active': 1.9
+  'sedentary': 1.2,
+  'light': 1.375,
+  'moderate': 1.55,
+  'active': 1.725,
+  'very_active': 1.9
 }
 
 const GOAL_MODIFIERS = {
-  'Lose Weight': -500,
-  'Maintain Weight': 0,
-  'Gain Weight': 500
+  'lose_weight': -500,
+  'maintain': 0,
+  'gain_weight': 500,
+  'build_muscle': 500
 }
 
 export default function CalculatorsPage() {
@@ -29,9 +30,9 @@ export default function CalculatorsPage() {
   const [weight, setWeight] = React.useState(currentWeight || 70)
   const [height, setHeight] = React.useState(profile.height || 175)
   const [age, setAge] = React.useState(profile.age || 25)
-  const [sex, setSex] = React.useState(profile.sex || 'Male')
-  const [activity, setActivity] = React.useState<UserProfile['activityLevel']>(profile.activityLevel || 'Moderately Active')
-  const [goal, setGoal] = React.useState<UserProfile['goal']>(profile.goal || 'Maintain Weight')
+  const [gender, setGender] = React.useState<UserProfile['gender']>(profile.gender || 'male')
+  const [activity, setActivity] = React.useState<UserProfile['activityLevel']>(profile.activityLevel || 'moderate')
+  const [goal, setGoal] = React.useState<UserProfile['goal']>(profile.goal || 'maintain')
   
   // Custom Macros
   const [proteinRatio, setProteinRatio] = React.useState(30)
@@ -56,7 +57,7 @@ export default function CalculatorsPage() {
 
   // Mifflin-St Jeor BMR
   let bmr = (10 * weight) + (6.25 * height) - (5 * age)
-  bmr = sex === 'Male' ? bmr + 5 : bmr - 161
+  bmr = gender === 'male' ? bmr + 5 : bmr - 161
 
   // TDEE
   const tdee = bmr * ACTIVITY_MULTIPLIERS[activity]
@@ -72,7 +73,7 @@ export default function CalculatorsPage() {
 
   const handleSaveToProfile = () => {
     updateProfile({
-      age, sex, height, activityLevel: activity, goal
+      age, gender, height, activityLevel: activity, goal
     })
     updateTargets({
       calories: targetCals,
@@ -107,11 +108,11 @@ export default function CalculatorsPage() {
             <div className="space-y-6">
               {/* Gender */}
               <div className="grid grid-cols-3 gap-2">
-                {['Male', 'Female', 'Other'].map(s => (
+                {['male', 'female', 'other'].map(s => (
                   <button
                     key={s}
-                    onClick={() => setSex(s as 'Male' | 'Female' | 'Other')}
-                    className={`h-10 text-xs font-bold uppercase tracking-widest transition-colors ${sex === s ? 'bg-white text-black' : 'border border-white/10 hover:bg-white/5'}`}
+                    onClick={() => setGender(s as 'male' | 'female' | 'other')}
+                    className={`h-10 text-xs font-bold uppercase tracking-widest transition-colors ${gender === s ? 'bg-white text-black' : 'border border-white/10 hover:bg-white/5'}`}
                   >
                     {s}
                   </button>
@@ -150,24 +151,29 @@ export default function CalculatorsPage() {
                   onChange={(e) => setActivity(e.target.value as any)}
                   className="w-full bg-[#05050A] border border-white/10 h-12 px-4 text-sm font-bold focus:outline-none focus:border-white transition-colors"
                 >
-                  <option value="Sedentary">Sedentary (Little to no exercise)</option>
-                  <option value="Lightly Active">Lightly Active (1-3 days/week)</option>
-                  <option value="Moderately Active">Moderately Active (3-5 days/week)</option>
-                  <option value="Very Active">Very Active (6-7 days/week)</option>
-                  <option value="Extremely Active">Extremely Active (Physical job/2x day)</option>
+                  <option value="sedentary">Sedentary (Little to no exercise)</option>
+                  <option value="light">Lightly Active (1-3 days/week)</option>
+                  <option value="moderate">Moderately Active (3-5 days/week)</option>
+                  <option value="active">Very Active (6-7 days/week)</option>
+                  <option value="very_active">Extremely Active (Physical job/2x day)</option>
                 </select>
               </div>
 
               <div>
                 <div className="text-xs font-bold uppercase tracking-widest text-white/50 mb-3">Primary Goal</div>
                 <div className="grid grid-cols-1 gap-2">
-                  {['Lose Weight', 'Maintain Weight', 'Gain Weight'].map(g => (
+                  {[
+                    { val: 'lose_weight', label: 'Lose Weight' },
+                    { val: 'maintain', label: 'Maintain Weight' },
+                    { val: 'gain_weight', label: 'Gain Weight' },
+                    { val: 'build_muscle', label: 'Build Muscle' }
+                  ].map(g => (
                     <button
-                      key={g}
-                      onClick={() => setGoal(g as any)}
-                      className={`h-12 text-xs font-bold uppercase tracking-widest transition-colors ${goal === g ? 'bg-white text-black' : 'border border-white/10 hover:bg-white/5'}`}
+                      key={g.val}
+                      onClick={() => setGoal(g.val as any)}
+                      className={`h-12 text-xs font-bold uppercase tracking-widest transition-colors ${goal === g.val ? 'bg-white text-black' : 'border border-white/10 hover:bg-white/5'}`}
                     >
-                      {g}
+                      {g.label}
                     </button>
                   ))}
                 </div>

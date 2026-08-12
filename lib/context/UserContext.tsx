@@ -14,10 +14,13 @@ export interface WeightEntry {
 export interface UserProfile {
   name: string
   age: number
-  sex: 'Male' | 'Female' | 'Other'
+  gender: 'male' | 'female' | 'other'
   height: number // in cm
-  activityLevel: 'Sedentary' | 'Lightly Active' | 'Moderately Active' | 'Very Active' | 'Extremely Active'
-  goal: 'Lose Weight' | 'Maintain Weight' | 'Gain Weight'
+  activityLevel: 'sedentary' | 'light' | 'moderate' | 'active' | 'very_active'
+  goal: 'lose_weight' | 'maintain' | 'gain_weight' | 'build_muscle'
+  dietaryPref?: 'vegetarian' | 'non_vegetarian' | 'vegan' | 'eggetarian'
+  fitnessLevel?: 'beginner' | 'intermediate' | 'advanced'
+  equipment?: 'gym' | 'home' | 'none'
 }
 
 export interface UserTargets {
@@ -46,10 +49,13 @@ const UserContext = React.createContext<UserContextType | undefined>(undefined)
 const DEFAULT_PROFILE: UserProfile = {
   name: '',
   age: 21,
-  sex: 'Male',
+  gender: 'male',
   height: 175,
-  activityLevel: 'Moderately Active',
-  goal: 'Maintain Weight'
+  activityLevel: 'moderate',
+  goal: 'maintain',
+  dietaryPref: 'non_vegetarian',
+  fitnessLevel: 'beginner',
+  equipment: 'none'
 }
 
 const DEFAULT_TARGETS: UserTargets = {
@@ -59,6 +65,32 @@ const DEFAULT_TARGETS: UserTargets = {
   fat: 80,
   water: 3000,
   steps: 10000
+}
+
+// Helpers for backward compatibility
+function mapLegacyGender(sex?: string): 'male' | 'female' | 'other' {
+  if (!sex) return 'male'
+  const lower = sex.toLowerCase()
+  if (lower === 'male' || lower === 'female' || lower === 'other') return lower as any
+  return 'male'
+}
+
+function mapLegacyGoal(goal?: string): 'lose_weight' | 'maintain' | 'gain_weight' | 'build_muscle' {
+  if (!goal) return 'maintain'
+  if (goal === 'Lose Weight') return 'lose_weight'
+  if (goal === 'Maintain Weight') return 'maintain'
+  if (goal === 'Gain Weight') return 'gain_weight'
+  return goal as any
+}
+
+function mapLegacyActivity(activity?: string): 'sedentary' | 'light' | 'moderate' | 'active' | 'very_active' {
+  if (!activity) return 'moderate'
+  if (activity === 'Sedentary') return 'sedentary'
+  if (activity === 'Lightly Active') return 'light'
+  if (activity === 'Moderately Active') return 'moderate'
+  if (activity === 'Very Active') return 'active'
+  if (activity === 'Extremely Active') return 'very_active'
+  return activity as any
 }
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
@@ -79,25 +111,42 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     if (authLoading) return
 
     try {
-      // Priority 1: MongoDB Profile (Option B)
+      let activeProfile = { ...DEFAULT_PROFILE, name: user?.name || '' }
+
+      // Priority 1: MongoDB Profile
       if (user?.profile) {
         const remoteProfile = user.profile
-        const mergedProfile = { ...DEFAULT_PROFILE, name: user.name, ...remoteProfile }
-        setProfile(mergedProfile)
-        localStorage.setItem(STORAGE_KEY_PROFILE, JSON.stringify(mergedProfile))
+        activeProfile = { ...activeProfile, ...remoteProfile }
       } else {
-        // Priority 2: LocalStorage Profile
-        const savedProfile = localStorage.getItem(STORAGE_KEY_PROFILE)
-        if (savedProfile) {
-          setProfile(JSON.parse(savedProfile))
-        } else if (user) {
-          setProfile({ ...DEFAULT_PROFILE, name: user.name })
+        // Priority 2: LocalStorage Profile (with legacy mapping)
+        const savedStr = localStorage.getItem(STORAGE_KEY_PROFILE)
+        if (savedStr) {
+          const saved = JSON.parse(savedStr)
+          activeProfile = {
+            ...activeProfile,
+            ...saved,
+            gender: saved.gender || mapLegacyGender(saved.sex),
+            goal: mapLegacyGoal(saved.goal),
+            activityLevel: mapLegacyActivity(saved.activityLevel),
+          }
         }
       }
+      setProfile(activeProfile)
+      localStorage.setItem(STORAGE_KEY_PROFILE, JSON.stringify(activeProfile))
 
       // Targets
       const savedTargets = localStorage.getItem(STORAGE_KEY_TARGETS)
-      if (savedTargets) setTargets(JSON.parse(savedTargets))
+      if (savedTargets) {
+        setTargets(JSON.parse(savedTargets))
+      }
+      // If user profile has daily targets from DB, use them
+      if (user?.profile?.dailyCalorieGoal || user?.profile?.dailyWaterGoal) {
+        setTargets(prev => ({
+          ...prev,
+          calories: user.profile.dailyCalorieGoal || prev.calories,
+          water: user.profile.dailyWaterGoal || prev.water,
+        }))
+      }
 
       // Current Weight
       const savedWeight = localStorage.getItem(STORAGE_KEY_WEIGHT_CURRENT)
@@ -108,10 +157,12 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         const wHist = histStore.getWeightHistory(userId)
         if (wHist.length > 0) {
           setCurrentWeight(wHist[wHist.length - 1].weight)
+        } else if (user?.profile?.weight) {
+          setCurrentWeight(user.profile.weight)
         }
       }
     } catch (e) {
-      console.error('Failed to load user state from localStorage', e)
+      console.error('Failed to load user state', e)
     }
     
     setIsHydrated(true)
@@ -145,10 +196,25 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     toast.success('Profile updated')
   }, [profile])
 
-  const updateTargets = React.useCallback((newTargets: Partial<UserTargets>) => {
-    setTargets(prev => ({ ...prev, ...newTargets }))
+  const updateTargets = React.useCallback(async (newTargets: Partial<UserTargets>) => {
+    const updated = { ...targets, ...newTargets }
+    setTargets(updated)
+    
+    try {
+      await fetch('/api/auth/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          dailyCalorieGoal: updated.calories,
+          dailyWaterGoal: updated.water,
+        }),
+      })
+    } catch (err) {
+      console.error('Failed to sync targets to server', err)
+    }
+    
     toast.success('Targets updated successfully')
-  }, [])
+  }, [targets])
 
   const logWeightAction = React.useCallback((weight: number, date: number = Date.now()) => {
     saveWeight(userId, weight, date)
@@ -160,7 +226,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     // Deprecated
   }, [])
 
-  // Do not render children until hydration is complete to prevent layout shift and data leak bugs
   if (authLoading || (!isHydrated && user)) {
     return <div className="flex h-screen items-center justify-center"><div className="animate-pulse text-muted-foreground">Initializing User Context...</div></div>
   }
@@ -188,3 +253,4 @@ export function useUser() {
   }
   return context
 }
+

@@ -100,8 +100,8 @@ export default function DashboardPage() {
   const currentWeight = dayWeightEntry ? dayWeightEntry.weight : (weights.length > 0 ? weights[weights.length - 1].weight : 0)
   
   let goalWeight = currentWeight
-  if (profile.goal === 'Lose Weight') goalWeight = currentWeight - 5
-  if (profile.goal === 'Gain Weight') goalWeight = currentWeight + 5
+  if (profile.goal === 'lose_weight') goalWeight = currentWeight - 5
+  if (profile.goal === 'gain_weight') goalWeight = currentWeight + 5
 
   let weightChange = 0
   if (weights.length > 1) {

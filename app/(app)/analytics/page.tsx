@@ -45,8 +45,8 @@ export default function AnalyticsPage() {
   
   let targetWeightNum = currentWeight || 70
   if (weights.length > 0) targetWeightNum = weights[0].weight
-  if (profile.goal === 'Lose Weight') targetWeightNum -= 5
-  if (profile.goal === 'Gain Weight') targetWeightNum += 5
+  if (profile.goal === 'lose_weight') targetWeightNum -= 5
+  if (profile.goal === 'gain_weight') targetWeightNum += 5
 
   const weightProgress = React.useMemo(() => {
     if (weights.length === 0) return null

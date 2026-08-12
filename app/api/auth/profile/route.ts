@@ -3,6 +3,7 @@ import connectToDatabase from '@/lib/mongodb'
 import User from '@/models/User'
 import { verifyToken } from '@/lib/auth'
 import { apiError, apiSuccess } from '@/lib/utils'
+import { profileUpdateSchema } from '@/lib/validations/auth'
 
 export async function PATCH(req: NextRequest) {
   try {
@@ -18,14 +19,32 @@ export async function PATCH(req: NextRequest) {
     }
 
     const body = await req.json()
-    // Body should contain the partial profile updates
+    const result = profileUpdateSchema.safeParse(body)
+    
+    if (!result.success) {
+      return apiError('Invalid input', 400, result.error.flatten().fieldErrors)
+    }
     
     await connectToDatabase()
     
-    // Use dot notation to update specific fields within profile
     const updateQuery: any = {}
-    for (const [key, value] of Object.entries(body)) {
-      updateQuery[`profile.${key}`] = value
+    
+    // Extract name (on root user document) vs profile fields
+    const { name, ...profileFields } = result.data
+    
+    if (name) {
+      updateQuery['name'] = name
+    }
+    
+    // Use dot notation to update specific fields within profile
+    for (const [key, value] of Object.entries(profileFields)) {
+      if (value !== undefined) {
+        updateQuery[`profile.${key}`] = value
+      }
+    }
+
+    if (Object.keys(updateQuery).length === 0) {
+      return apiError('No valid fields to update', 400)
     }
 
     const user = await User.findByIdAndUpdate(
@@ -38,7 +57,8 @@ export async function PATCH(req: NextRequest) {
       return apiError('User not found', 404)
     }
 
-    return apiSuccess({ profile: user.profile }, 'Profile updated successfully')
+    // Don't return sensitive data
+    return apiSuccess({ profile: user.profile, name: user.name }, 'Profile updated successfully')
 
   } catch (error) {
     console.error('Profile update error:', error)
