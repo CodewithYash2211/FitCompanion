@@ -86,38 +86,70 @@ export function NutritionProvider({ children }: { children: React.ReactNode }) {
   const dailyCTarget = targets.carbs
   const dailyFTarget = targets.fat
 
-  // Load from localStorage on mount
+  // Load from localStorage on mount (for meals/steps) and API for water
   React.useEffect(() => {
+    let mounted = true
     if (authLoading) return
 
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY)
-      let parsedMeals: FoodItem[] = []
-      let parsedWaterLog: WaterEntry[] = []
-      let parsedStepsLog: StepsEntry[] = []
+    const loadLocal = () => {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY)
+        let parsedMeals: FoodItem[] = []
+        let parsedWaterLog: WaterEntry[] = []
+        let parsedStepsLog: StepsEntry[] = []
 
-      if (saved) {
-        const parsed = JSON.parse(saved)
-        parsedMeals = parsed.loggedMeals || []
-        
-        // Migration from old flat numbers if present
-        if (parsed.waterLog) parsedWaterLog = parsed.waterLog
-        else if (parsed.waterAmount) parsedWaterLog = [{ date: Date.now(), amount: parsed.waterAmount }]
-        
-        if (parsed.stepsLog) parsedStepsLog = parsed.stepsLog
-        else if (parsed.steps) parsedStepsLog = [{ date: Date.now(), count: parsed.steps }]
+        if (saved) {
+          const parsed = JSON.parse(saved)
+          parsedMeals = parsed.loggedMeals || []
+          
+          if (!user || user._id === 'guest') {
+            if (parsed.waterLog) parsedWaterLog = parsed.waterLog
+            else if (parsed.waterAmount) parsedWaterLog = [{ date: Date.now(), amount: parsed.waterAmount }]
+          }
+          
+          if (parsed.stepsLog) parsedStepsLog = parsed.stepsLog
+          else if (parsed.steps) parsedStepsLog = [{ date: Date.now(), count: parsed.steps }]
+        }
+
+        if (mounted) {
+          setLoggedMeals(parsedMeals)
+          if (!user || user._id === 'guest') {
+            setWaterLog(parsedWaterLog)
+          }
+          setStepsLog(parsedStepsLog)
+        }
+      } catch(e) {
+        console.error('Failed to parse nutrition state', e)
       }
+    }
+    
+    loadLocal()
 
+    const loadWaterFromAPI = async () => {
+      if (user && user._id !== 'guest') {
+        try {
+          const res = await fetch('/api/water')
+          if (res.ok) {
+            const data = await res.json()
+            if (mounted && data.log) {
+               const todayStart = new Date().setHours(0,0,0,0)
+               setWaterLog([{ date: todayStart, amount: data.log.totalMl || 0 }])
+            }
+          } else {
+             if (mounted) setWaterLog([{ date: new Date().setHours(0,0,0,0), amount: 0 }])
+          }
+        } catch (e) {
+          console.error('Failed to fetch water', e)
+        }
+      }
+    }
 
-      setLoggedMeals(parsedMeals)
-      setWaterLog(parsedWaterLog)
-      setStepsLog(parsedStepsLog)
-    } catch(e) {
-      console.error('Failed to parse nutrition state', e)
+    if (user && user._id !== 'guest') {
+      loadWaterFromAPI()
     }
     
     const draft = localStorage.getItem(DRAFT_KEY)
-    if (draft) {
+    if (draft && mounted) {
       try {
         const parsedDraft = JSON.parse(draft)
         if (parsedDraft && parsedDraft.length > 0) {
@@ -127,16 +159,20 @@ export function NutritionProvider({ children }: { children: React.ReactNode }) {
       } catch (e) {}
     }
 
-    setIsHydrated(true)
-  }, [authLoading, userId, STORAGE_KEY, DRAFT_KEY])
+    if (mounted) setIsHydrated(true)
+
+    return () => { mounted = false }
+  }, [authLoading, userId, STORAGE_KEY, DRAFT_KEY, user])
 
   // Save to localStorage whenever state changes (if hydrated)
   React.useEffect(() => {
     if (isHydrated && !authLoading) {
-      const stateToSave = { loggedMeals, waterLog, stepsLog }
+      // Don't save authenticated water to local storage
+      const waterToSave = (!user || user._id === 'guest') ? waterLog : []
+      const stateToSave = { loggedMeals, waterLog: waterToSave, stepsLog }
       localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave))
     }
-  }, [loggedMeals, waterLog, stepsLog, isHydrated, authLoading, STORAGE_KEY])
+  }, [loggedMeals, waterLog, stepsLog, isHydrated, authLoading, STORAGE_KEY, user])
 
   // Save drafts
   const saveDraftMeals = React.useCallback((foods: FoodItem[]) => {
@@ -198,13 +234,28 @@ export function NutritionProvider({ children }: { children: React.ReactNode }) {
     saveToHistory()
     const food = loggedMeals[index]
     setLoggedMeals(prev => prev.filter((_, i) => i !== index))
-    toast(`🗑️ ${food.name} deleted.`, {
+    toast(`💧 ${food.name} deleted.`, {
       action: { label: 'Undo', onClick: () => undo() },
       duration: 4000
     })
   }, [loggedMeals, saveToHistory, undo])
 
-  const addWater = React.useCallback((amount: number) => {
+  const addWater = React.useCallback(async (amount: number) => {
+    if (user && user._id !== 'guest') {
+      try {
+        const res = await fetch('/api/water', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ amount })
+        })
+        if (!res.ok) throw new Error('API failed')
+      } catch (err) {
+        console.error('Failed to sync water to API', err)
+        toast.error('Failed to add water. Please try again.')
+        return
+      }
+    }
+    
     saveToHistory()
     setWaterLog(prev => {
       const todayStart = new Date().setHours(0,0,0,0)
@@ -215,9 +266,24 @@ export function NutritionProvider({ children }: { children: React.ReactNode }) {
       return [...prev, { date: Date.now(), amount }]
     })
     toast.success(`💧 Added ${amount}ml water.`)
-  }, [saveToHistory])
+  }, [saveToHistory, user])
 
-  const removeWater = React.useCallback((amount: number) => {
+  const removeWater = React.useCallback(async (amount: number) => {
+    if (user && user._id !== 'guest') {
+      try {
+        const res = await fetch('/api/water', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ amount: -amount }) // Use negative amount for removal
+        })
+        if (!res.ok) throw new Error('API failed')
+      } catch (err) {
+        console.error('Failed to sync water removal to API', err)
+        toast.error('Failed to remove water. Please try again.')
+        return
+      }
+    }
+
     saveToHistory()
     setWaterLog(prev => {
       const todayStart = new Date().setHours(0,0,0,0)
@@ -228,7 +294,7 @@ export function NutritionProvider({ children }: { children: React.ReactNode }) {
       return prev
     })
     toast(`Removed ${amount}ml water.`)
-  }, [saveToHistory])
+  }, [saveToHistory, user])
 
   const addSteps = React.useCallback((amount: number) => {
     // Determine today's count from the dedicated store and add to it
