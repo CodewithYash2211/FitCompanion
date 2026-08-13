@@ -27,12 +27,12 @@ export default function CalculatorsPage() {
   const [isLoaded, setIsLoaded] = React.useState(false)
 
   // Local state for interactive calculators
-  const [weight, setWeight] = React.useState(currentWeight || 70)
-  const [height, setHeight] = React.useState(profile.height || 175)
-  const [age, setAge] = React.useState(profile.age || 25)
-  const [gender, setGender] = React.useState<UserProfile['gender']>(profile.gender || 'male')
-  const [activity, setActivity] = React.useState<UserProfile['activityLevel']>(profile.activityLevel || 'moderate')
-  const [goal, setGoal] = React.useState<UserProfile['goal']>(profile.goal || 'maintain')
+  const [weight, setWeight] = React.useState<number | undefined | null>(currentWeight)
+  const [height, setHeight] = React.useState<number | undefined>(profile.height)
+  const [age, setAge] = React.useState<number | undefined>(profile.age)
+  const [gender, setGender] = React.useState<UserProfile['gender']>(profile.gender)
+  const [activity, setActivity] = React.useState<UserProfile['activityLevel']>(profile.activityLevel)
+  const [goal, setGoal] = React.useState<UserProfile['goal']>(profile.goal)
   
   // Custom Macros
   const [proteinRatio, setProteinRatio] = React.useState(30)
@@ -47,23 +47,28 @@ export default function CalculatorsPage() {
   if (!isLoaded) return <div className="min-h-screen bg-[#020202]" />
 
   // Calculations
+  const calcWeight = weight || 70
+  const calcHeight = height || 175
+  const calcAge = age || 25
+  const calcGender = gender || 'male'
+
   // BMI = kg / m^2
-  const heightM = height / 100
-  const bmi = weight / (heightM * heightM)
+  const heightM = calcHeight / 100
+  const bmi = calcWeight / (heightM * heightM)
   let bmiCategory = 'Normal'
   if (bmi < 18.5) bmiCategory = 'Underweight'
   else if (bmi >= 25 && bmi < 30) bmiCategory = 'Overweight'
   else if (bmi >= 30) bmiCategory = 'Obese'
 
   // Mifflin-St Jeor BMR
-  let bmr = (10 * weight) + (6.25 * height) - (5 * age)
-  bmr = gender === 'male' ? bmr + 5 : bmr - 161
+  let bmr = (10 * calcWeight) + (6.25 * calcHeight) - (5 * calcAge)
+  bmr = calcGender === 'male' ? bmr + 5 : bmr - 161
 
   // TDEE
-  const tdee = bmr * ACTIVITY_MULTIPLIERS[activity]
+  const tdee = bmr * (activity ? ACTIVITY_MULTIPLIERS[activity] : 1.55) // fallback to moderate for calc
   
   // Target Calories
-  const targetCals = Math.round(tdee + GOAL_MODIFIERS[goal])
+  const targetCals = Math.round(tdee + (goal ? GOAL_MODIFIERS[goal] : 0)) // fallback to maintain for calc
 
   // Target Macros
   // 1g Protein = 4 kcal, 1g Fat = 9 kcal, 1g Carb = 4 kcal
@@ -123,34 +128,35 @@ export default function CalculatorsPage() {
               <div>
                 <div className="flex justify-between text-xs font-bold uppercase tracking-widest mb-2">
                   <span className="text-white/50">Weight</span>
-                  <span>{weight} kg</span>
+                  <span>{calcWeight} kg</span>
                 </div>
-                <input type="range" min="30" max="200" step="0.5" value={weight} onChange={(e) => setWeight(parseFloat(e.target.value))} className="w-full accent-white" />
+                <input type="range" min="30" max="200" step="0.5" value={calcWeight} onChange={(e) => setWeight(parseFloat(e.target.value))} className="w-full accent-white" />
               </div>
 
               <div>
                 <div className="flex justify-between text-xs font-bold uppercase tracking-widest mb-2">
                   <span className="text-white/50">Height</span>
-                  <span>{height} cm</span>
+                  <span>{calcHeight} cm</span>
                 </div>
-                <input type="range" min="120" max="250" step="1" value={height} onChange={(e) => setHeight(parseInt(e.target.value))} className="w-full accent-white" />
+                <input type="range" min="120" max="250" step="1" value={calcHeight} onChange={(e) => setHeight(parseInt(e.target.value))} className="w-full accent-white" />
               </div>
 
               <div>
                 <div className="flex justify-between text-xs font-bold uppercase tracking-widest mb-2">
                   <span className="text-white/50">Age</span>
-                  <span>{age} yrs</span>
+                  <span>{calcAge} yrs</span>
                 </div>
-                <input type="range" min="12" max="100" step="1" value={age} onChange={(e) => setAge(parseInt(e.target.value))} className="w-full accent-white" />
+                <input type="range" min="12" max="100" step="1" value={calcAge} onChange={(e) => setAge(parseInt(e.target.value))} className="w-full accent-white" />
               </div>
 
               <div className="pt-4 border-t border-white/10">
                 <div className="text-xs font-bold uppercase tracking-widest text-white/50 mb-3">Activity Level</div>
                 <select 
-                  value={activity} 
+                  value={activity || ''} 
                   onChange={(e) => setActivity(e.target.value as any)}
                   className="w-full bg-[#05050A] border border-white/10 h-12 px-4 text-sm font-bold focus:outline-none focus:border-white transition-colors"
                 >
+                  <option value="" disabled>Select Activity Level</option>
                   <option value="sedentary">Sedentary (Little to no exercise)</option>
                   <option value="light">Lightly Active (1-3 days/week)</option>
                   <option value="moderate">Moderately Active (3-5 days/week)</option>
