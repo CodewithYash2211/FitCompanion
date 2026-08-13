@@ -65,11 +65,17 @@ export default function CalculatorsPage() {
   bmr = calcGender === 'male' ? bmr + 5 : bmr - 161
 
   // TDEE
-  const tdee = bmr * (activity ? ACTIVITY_MULTIPLIERS[activity] : 1.55) // fallback to moderate for calc
-  
-  // Target Calories
-  const targetCals = Math.round(tdee + (goal ? GOAL_MODIFIERS[goal] : 0)) // fallback to maintain for calc
+ const activityMultiplier = activity
+  ? ACTIVITY_MULTIPLIERS[activity as keyof typeof ACTIVITY_MULTIPLIERS]
+  : 1.55
 
+const goalModifier = goal
+  ? GOAL_MODIFIERS[goal as keyof typeof GOAL_MODIFIERS]
+  : 0
+
+const tdee = bmr * activityMultiplier
+
+const targetCals = Math.round(tdee + goalModifier)
   // Target Macros
   // 1g Protein = 4 kcal, 1g Fat = 9 kcal, 1g Carb = 4 kcal
   const targetProtein = Math.round((targetCals * (proteinRatio / 100)) / 4)
