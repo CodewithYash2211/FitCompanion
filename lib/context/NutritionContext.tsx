@@ -254,6 +254,14 @@ export function NutritionProvider({ children }: { children: React.ReactNode }) {
           body: JSON.stringify({ amount, date: localDate })
         })
         if (!res.ok) throw new Error('API failed')
+
+        const data = await res.json()
+        if (data.log) {
+          saveToHistory()
+          setWaterLog([{ date: new Date().setHours(0,0,0,0), amount: data.log.totalMl }])
+          toast.success(`💧 Added ${amount}ml water.`)
+        }
+        return
       } catch (err) {
         console.error('Failed to sync water to API', err)
         toast.error('Failed to add water. Please try again.')
@@ -261,6 +269,7 @@ export function NutritionProvider({ children }: { children: React.ReactNode }) {
       }
     }
     
+    // Fallback for guest
     saveToHistory()
     setWaterLog(prev => {
       const todayStart = new Date().setHours(0,0,0,0)
@@ -284,6 +293,14 @@ export function NutritionProvider({ children }: { children: React.ReactNode }) {
           body: JSON.stringify({ amount: -amount, date: localDate }) // Use negative amount for removal
         })
         if (!res.ok) throw new Error('API failed')
+
+        const data = await res.json()
+        if (data.log) {
+          saveToHistory()
+          setWaterLog([{ date: new Date().setHours(0,0,0,0), amount: data.log.totalMl }])
+          toast(`Removed ${amount}ml water.`)
+        }
+        return
       } catch (err) {
         console.error('Failed to sync water removal to API', err)
         toast.error('Failed to remove water. Please try again.')
@@ -291,6 +308,7 @@ export function NutritionProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
+    // Fallback for guest
     saveToHistory()
     setWaterLog(prev => {
       const todayStart = new Date().setHours(0,0,0,0)

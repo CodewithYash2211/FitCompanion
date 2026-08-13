@@ -20,7 +20,6 @@ export async function GET(req: NextRequest) {
     const payload = await verifyToken(token)
     if (!payload) return apiError('Invalid or expired token', 401)
 
-    // Optional date query, default to today
     const { searchParams } = new URL(req.url)
     const date = searchParams.get('date') || new Date().toISOString().split('T')[0]
 
@@ -31,7 +30,14 @@ export async function GET(req: NextRequest) {
       date 
     }).lean()
 
-    // Return empty state safely if not found
+    console.log({
+      type: 'WATER_GET',
+      userId: payload.userId,
+      date,
+      found: !!waterLog,
+      total: waterLog?.totalMl ?? 0
+    })
+
     if (!waterLog) {
       return apiSuccess({ log: { entries: [], totalMl: 0, date } })
     }
@@ -65,21 +71,34 @@ export async function POST(req: NextRequest) {
 
     let waterLog = await WaterLog.findOne({ userId: payload.userId, date })
     
+    // Only push if amount is positive. For removal, we don't push negative to entries, just update totalMl
+    const isRemoval = amount < 0
+
     if (!waterLog) {
-      // If we're trying to remove water but no log exists, just create one with 0
       const newTotal = Math.max(0, amount)
+      const entries = isRemoval ? [] : [{ amount, loggedAt: new Date() }]
       waterLog = await WaterLog.create({
         userId: payload.userId,
         date,
-        entries: [{ amount, loggedAt: new Date() }],
+        entries,
         totalMl: newTotal
       })
     } else {
       const newTotal = Math.max(0, waterLog.totalMl + amount)
-      waterLog.entries.push({ amount, loggedAt: new Date() } as any)
+      if (!isRemoval) {
+        waterLog.entries.push({ amount, loggedAt: new Date() } as any)
+      }
       waterLog.totalMl = newTotal
       await waterLog.save()
     }
+
+    console.log({
+      type: 'WATER_POST',
+      userId: payload.userId,
+      date,
+      amount,
+      savedTotal: waterLog.totalMl
+    })
 
     return apiSuccess({ log: waterLog }, 'Water logged successfully')
   } catch (error) {
