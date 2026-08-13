@@ -7,6 +7,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { useNutrition } from '@/lib/context/NutritionContext'
+import { useWorkout } from '@/lib/context/WorkoutContext'
 
 function CircularProgress({ value, max, label, color, delay = 0 }: { value: number, max: number, label: string, color: string, delay?: number }) {
   const radius = 40
@@ -59,6 +60,8 @@ export default function NutritionDashboard() {
     removeMeal,
     undo
   } = useNutrition()
+  
+  const { workoutHistory } = useWorkout()
 
   const [isOffline, setIsOffline] = React.useState(false)
 
@@ -92,9 +95,14 @@ export default function NutritionDashboard() {
   const consumedCarbs = loggedMeals.reduce((acc, curr) => acc + (curr.c * (curr.qty || 1)), 0)
   const consumedFat = loggedMeals.reduce((acc, curr) => acc + (curr.f * (curr.qty || 1)), 0)
 
-  const remainingKcal = Math.max(dailyKcalTarget - consumedKcal, 0)
+  const todayStr = new Date().toISOString().split('T')[0]
+  const burnedKcal = workoutHistory
+    .filter(w => new Date(w.startTime).toISOString().split('T')[0] === todayStr)
+    .reduce((acc, curr) => acc + (curr.caloriesBurned || 0), 0)
+
+  const remainingKcal = dailyKcalTarget > 0 ? Math.max(dailyKcalTarget - consumedKcal, 0) : null
   const calCircumference = 2 * Math.PI * 80
-  const calRatio = Math.min(consumedKcal / dailyKcalTarget, 1)
+  const calRatio = dailyKcalTarget > 0 ? Math.min(consumedKcal / dailyKcalTarget, 1) : 0
 
   return (
     <motion.div 
@@ -170,19 +178,19 @@ export default function NutritionDashboard() {
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
                 <span className="font-display font-bold text-4xl">{Math.round(consumedKcal)}</span>
-                <span className="text-xs font-bold text-white/40 uppercase tracking-widest">/ {dailyKcalTarget} kcal</span>
+                <span className="text-xs font-bold text-white/40 uppercase tracking-widest">/ {dailyKcalTarget > 0 ? `${dailyKcalTarget} kcal` : 'Not set'}</span>
               </div>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4 pt-6 border-t border-white/10">
             <div>
-              <div className="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-1">Burned (Mock)</div>
-              <div className="font-bold text-lg">650 kcal</div>
+              <div className="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-1">Burned</div>
+              <div className="font-bold text-lg">{Math.round(burnedKcal)} kcal</div>
             </div>
             <div className="text-right">
               <div className="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-1">Remaining</div>
-              <div className="font-bold text-lg text-success">{Math.round(remainingKcal)} kcal</div>
+              <div className="font-bold text-lg text-success">{remainingKcal !== null ? `${Math.round(remainingKcal)} kcal` : '--'}</div>
             </div>
           </div>
         </motion.div>
