@@ -5,6 +5,8 @@ import { verifyToken } from '@/lib/auth'
 import { apiError, apiSuccess } from '@/lib/utils'
 import { z } from 'zod'
 
+export const dynamic = 'force-dynamic'
+
 const waterSchema = z.object({
   amount: z.number().min(-5000).max(5000), // ml
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format (YYYY-MM-DD)').optional(),

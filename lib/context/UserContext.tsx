@@ -16,6 +16,7 @@ export interface UserProfile {
   age?: number
   gender?: 'male' | 'female' | 'other'
   height?: number // in cm
+  weight?: number // in kg
   targetWeight?: number // in kg
   activityLevel?: 'sedentary' | 'light' | 'moderate' | 'active' | 'very_active'
   goal?: 'lose_weight' | 'maintain' | 'gain_weight' | 'build_muscle'

@@ -42,7 +42,7 @@ const targetsSchema = z.object({
 type TargetsInput = z.infer<typeof targetsSchema>
 
 export default function SettingsPage() {
-  const { profile, currentWeight, targets, updateProfile, updateTargets } = useUser()
+  const { profile, currentWeight, targets, updateProfile, updateTargets, logWeight } = useUser()
   const { user, logout } = useAuth()
   
   const [isSavingProfile, setIsSavingProfile] = React.useState(false)
@@ -51,11 +51,11 @@ export default function SettingsPage() {
   const profileForm = useForm<ProfileInput>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      name: profile.name,
+      name: user?.name || '',
       age: profile.age,
       gender: profile.gender,
       height: profile.height,
-      weight: currentWeight || 70,
+      weight: currentWeight || profile.weight || 70,
       targetWeight: profile.targetWeight || undefined,
       goal: profile.goal,
       activityLevel: profile.activityLevel,
@@ -77,11 +77,11 @@ export default function SettingsPage() {
   // Reset forms when profile data loads
   React.useEffect(() => {
     profileForm.reset({
-      name: profile.name,
+      name: user?.name || '',
       age: profile.age,
       gender: profile.gender,
       height: profile.height,
-      weight: currentWeight || 70,
+      weight: currentWeight || profile.weight || 70,
       targetWeight: profile.targetWeight || undefined,
       goal: profile.goal,
       activityLevel: profile.activityLevel,
@@ -94,7 +94,7 @@ export default function SettingsPage() {
       water: targets.water,
       steps: targets.steps,
     })
-  }, [profile, currentWeight, targets, profileForm, targetsForm])
+  }, [profile, currentWeight, targets, profileForm, targetsForm, user])
 
   const onProfileSubmit = async (data: ProfileInput) => {
     setIsSavingProfile(true)
@@ -104,11 +104,15 @@ export default function SettingsPage() {
         age: data.age,
         gender: data.gender,
         height: data.height,
+        weight: data.weight,
         targetWeight: data.targetWeight,
         goal: data.goal,
         activityLevel: data.activityLevel,
       })
-      // if weight changed, could log weight, but let's keep it simple
+      
+      if (data.weight && data.weight !== currentWeight) {
+        logWeight(data.weight)
+      }
     } finally {
       setIsSavingProfile(false)
     }

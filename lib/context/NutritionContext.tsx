@@ -128,7 +128,10 @@ export function NutritionProvider({ children }: { children: React.ReactNode }) {
     const loadWaterFromAPI = async () => {
       if (user && user._id !== 'guest') {
         try {
-          const res = await fetch('/api/water')
+          const store = require('@/lib/historyStore')
+          const localDate = store.getLocalDateString()
+          // Append cache-buster and localDate
+          const res = await fetch(`/api/water?date=${localDate}&t=${Date.now()}`)
           if (res.ok) {
             const data = await res.json()
             if (mounted && data.log) {
@@ -243,10 +246,12 @@ export function NutritionProvider({ children }: { children: React.ReactNode }) {
   const addWater = React.useCallback(async (amount: number) => {
     if (user && user._id !== 'guest') {
       try {
+        const store = require('@/lib/historyStore')
+        const localDate = store.getLocalDateString()
         const res = await fetch('/api/water', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ amount })
+          body: JSON.stringify({ amount, date: localDate })
         })
         if (!res.ok) throw new Error('API failed')
       } catch (err) {
@@ -271,10 +276,12 @@ export function NutritionProvider({ children }: { children: React.ReactNode }) {
   const removeWater = React.useCallback(async (amount: number) => {
     if (user && user._id !== 'guest') {
       try {
+        const store = require('@/lib/historyStore')
+        const localDate = store.getLocalDateString()
         const res = await fetch('/api/water', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ amount: -amount }) // Use negative amount for removal
+          body: JSON.stringify({ amount: -amount, date: localDate }) // Use negative amount for removal
         })
         if (!res.ok) throw new Error('API failed')
       } catch (err) {
